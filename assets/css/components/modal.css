@@ -1,0 +1,125 @@
+/* Modal component styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 24px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.close-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.close-button:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid #e5e7eb;
+}
+
+.modal-button {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid;
+    transition: all 200ms ease;
+}
+
+.modal-button.cancel {
+    background: white;
+    color: #374151;
+    border-color: #d1d5db;
+}
+
+.modal-button.cancel:hover {
+    background: #f9fafb;
+}
+
+.modal-button.save {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.modal-button.save:hover {
+    background: #2563eb;
+}
+
+/* Responsive for modal */
+@media (max-width: 768px) {
+    .modal-header h3 {
+        font-size: 18px;
+    }
+
+    .modal-button {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-header h3 {
+        font-size: 16px;
+    }
+
+    .modal-button {
+        font-size: 12px;
+    }
+}

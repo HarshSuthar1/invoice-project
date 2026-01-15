@@ -1,0 +1,26 @@
+/* app.css - imports all CSS bundles in cascade order */
+/* Import font first (moved from view) */
+@import url('https://fonts.googleapis.com/css?family=Karla');
+
+/* Base layer - resets, typography, variables */
+@import './base/base_styling.css';
+
+/* Components */
+@import './components/buttons.css';
+@import './components/modal.css';
+@import './components/forms.css';
+@import './components/toasts.css';
+@import './components/utilities.css';
+
+/* Layouts (none moved yet) */
+/* @import './layouts/sidebar.css'; */
+
+/* Pages */
+@import './pages/clients.css';
+@import './pages/dashboard.css';
+@import './pages/manage_invoice.css';
+@import './pages/reports.css';
+@import './pages/profile.css';
+@import './pages/login.css';
+@import './pages/signin.css';
+@import './pages/invoice.css';
