@@ -1,177 +1,176 @@
-/*
-invoice.js
-Optimized invoice page logic
-- load clients
-- add / remove items
-- auto calculate totals
-- save invoice
-*/
+/**
+ * Invoice Management System - Logic for Creating Invoices
+ * Handles dynamic rows, real-time math, and secure data submission.
+ */
 
-import { qs, qsa } from '../core/dom.js';
-import { showError, showSuccess } from '../core/ui.js';
-import { required } from '../core/validators.js';
-import { fetchClients } from '../core/data/clients.js';
-import { saveInvoice as saveInvoiceApi } from '../core/data/invoice.js';
+document.addEventListener('DOMContentLoaded', function() {
+    // Initial Setup
+    fetchClients();
+    fetchNextInvoiceNumber();
+    
+    // Add the first row automatically
+    addNewRow();
 
-let itemIndex = 0;
-
-/* ----------------------------------
-   Init
----------------------------------- */
-document.addEventListener('DOMContentLoaded', () => {
-  loadClients();
-  addItemRow();
+    // Event Listeners
+    document.getElementById('addRowBtn').addEventListener('click', addNewRow);
+    document.getElementById('invoiceForm').addEventListener('submit', handleInvoiceSubmit);
 });
 
-/* ----------------------------------
-   Load clients into dropdown
----------------------------------- */
-async function loadClients() {
-  try {
-    const clients = await fetchClients();
+/**
+ * Adds a new item row to the invoice table
+ */
+function addNewRow() {
+    const tbody = document.getElementById('itemsBody');
+    const rowId = Date.now(); // Unique ID for finding this specific row
+    
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-id', rowId);
+    tr.innerHTML = `
+        <td>
+            <input type="text" class="item-desc" placeholder="Item description..." required>
+        </td>
+        <td>
+            <input type="number" class="item-qty" value="1" min="1" step="any" required>
+        </td>
+        <td>
+            <input type="number" class="item-price" value="0.00" min="0" step="0.01" required>
+        </td>
+        <td>
+            <span class="row-total">₹0.00</span>
+        </td>
+        <td>
+            <button type="button" class="remove-btn" onclick="removeRow(this)">×</button>
+        </td>
+    `;
 
-    const select = qs('#clientSelect');
-    select.innerHTML = `<option value="">Select Client</option>`;
+    tbody.appendChild(tr);
 
-    clients.forEach(client => {
-      const option = document.createElement('option');
-      option.value = client.id;
-      option.textContent =
-        client.company_name ||
-        client.companyName ||
-        `Client #${client.id}`;
+    // Add listeners to new inputs to trigger calculations
+    const qtyInput = tr.querySelector('.item-qty');
+    const priceInput = tr.querySelector('.item-price');
 
-      select.appendChild(option);
-    });
-
-  } catch (err) {
-    console.error(err);
-    showError('Failed to load clients');
-  }
+    qtyInput.addEventListener('input', calculateTotals);
+    priceInput.addEventListener('input', calculateTotals);
+    
+    calculateTotals(); // Initial calculation for the new row
 }
 
-/* ----------------------------------
-   Add item row
----------------------------------- */
-function addItemRow() {
-  const tbody = qs('#invoiceItemsBody');
-  const row = document.createElement('tr');
-  row.dataset.index = itemIndex++;
-
-  row.innerHTML = `
-    <td><input type="text" class="desc" required></td>
-    <td><input type="number" class="qty" value="1" min="1"></td>
-    <td><input type="text" class="unit" value="Nos"></td>
-    <td><input type="number" class="price" value="0" min="0"></td>
-    <td><input type="number" class="tax" value="0" min="0"></td>
-    <td class="lineTotal">0.00</td>
-    <td><button class="btn-delete btn" data-action="remove-item">X</button></td>
-  `;
-
-  tbody.appendChild(row);
+/**
+ * Removes a row and updates totals
+ */
+function removeRow(button) {
+    const rows = document.querySelectorAll('#itemsBody tr');
+    if (rows.length > 1) {
+        button.closest('tr').remove();
+        calculateTotals();
+    } else {
+        alert("An invoice must have at least one item.");
+    }
 }
 
-/* ----------------------------------
-   Calculate totals
----------------------------------- */
+/**
+ * Calculates row totals and the grand total for the UI
+ */
 function calculateTotals() {
-  let subtotal = 0;
-  let taxTotal = 0;
+    let grandTotal = 0;
+    const rows = document.querySelectorAll('#itemsBody tr');
 
-  qsa('#invoiceItemsBody tr').forEach(row => {
-    const qty = Number(row.querySelector('.qty').value) || 0;
-    const price = Number(row.querySelector('.price').value) || 0;
-    const taxRate = Number(row.querySelector('.tax').value) || 0;
+    rows.forEach(row => {
+        const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+        const price = parseFloat(row.querySelector('.item-price').value) || 0;
+        const total = qty * price;
 
-    const lineAmount = qty * price;
-    const taxAmount = (lineAmount * taxRate) / 100;
+        row.querySelector('.row-total').textContent = `₹${total.toFixed(2)}`;
+        grandTotal += total;
+    });
 
-    subtotal += lineAmount;
-    taxTotal += taxAmount;
-
-    row.querySelector('.lineTotal').textContent =
-      (lineAmount + taxAmount).toFixed(2);
-  });
-
-  qs('#subtotal').textContent = subtotal.toFixed(2);
-  qs('#totalTax').textContent = taxTotal.toFixed(2);
-  qs('#grandTotal').textContent = (subtotal + taxTotal).toFixed(2);
+    // Update Display
+    document.getElementById('displayGrandTotal').textContent = `₹${grandTotal.toFixed(2)}`;
+    
+    // Set hidden input (for reference, though PHP will recalculate)
+    const grandTotalInput = document.getElementById('grandTotalInput');
+    if (grandTotalInput) grandTotalInput.value = grandTotal.toFixed(2);
 }
 
-/* ----------------------------------
-   Event delegation
----------------------------------- */
-document.addEventListener('click', (e) => {
-  const action = e.target.dataset.action;
-  if (!action) return;
+/**
+ * Fetches clients from the API to populate the dropdown
+ */
+async function fetchClients() {
+    try {
+        const response = await fetch('/Business project/api/clients/get_clients.php');
+        const clients = await response.json();
+        const select = document.getElementById('clientSelect');
 
-  if (action === 'add-item') {
-    addItemRow();
-  }
+        clients.forEach(client => {
+            const opt = document.createElement('option');
+            opt.value = client.id;
+            opt.textContent = client.name;
+            select.appendChild(opt);
+        });
+    } catch (err) {
+        console.error("Failed to load clients:", err);
+    }
+}
 
-  if (action === 'remove-item') {
-    e.target.closest('tr')?.remove();
-    calculateTotals();
-  }
+/**
+ * Fetches the next logical invoice number
+ */
+async function fetchNextInvoiceNumber() {
+    try {
+        const response = await fetch('/Business project/api/invoices/get_next_invoice.php');
+        const data = await response.json();
+        document.getElementById('invoiceNumberInput').value = data.next_number;
+    } catch (err) {
+        console.error("Failed to fetch invoice number:", err);
+    }
+}
 
-  if (action === 'save-invoice') {
-    saveInvoice();
-  }
-});
+/**
+ * Final Submission Logic
+ */
+async function handleInvoiceSubmit(e) {
+    e.preventDefault();
 
-/* ----------------------------------
-   Recalculate on input
----------------------------------- */
-document.addEventListener('input', (e) => {
-  if (e.target.closest('#invoiceItemsBody')) {
-    calculateTotals();
-  }
-});
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Saving...";
 
-/* ----------------------------------
-   Save invoice
----------------------------------- */
-async function saveInvoice() {
-  if (!required(qs('#clientSelect').value)) {
-    showError('Please select a client');
-    return;
-  }
+    const items = [];
+    const rows = document.querySelectorAll('#itemsBody tr');
 
-  const items = [];
-
-  qsa('#invoiceItemsBody tr').forEach(row => {
-    items.push({
-      description: row.querySelector('.desc').value,
-      quantity: row.querySelector('.qty').value,
-      price: row.querySelector('.price').value,
-      tax: row.querySelector('.tax').value
+    // Build the items array
+    rows.forEach(row => {
+        items.push({
+            description: row.querySelector('.item-desc').value,
+            quantity: parseFloat(row.querySelector('.item-qty').value),
+            price: parseFloat(row.querySelector('.item-price').value)
+        });
     });
-  });
 
-  if (!items.length) {
-    showError('Add at least one item');
-    return;
-  }
+    const formData = new FormData(e.target);
+    
+    // Pack items into a JSON string to match the PHP script's expectation
+    formData.append('items', JSON.stringify(items));
 
-  const formData = new FormData(qs('#invoiceForm'));
-  formData.append('items', JSON.stringify(items));
-  formData.append('grand_total', qs('#grandTotal').textContent);
+    try {
+        const response = await fetch('/Business project/api/invoices/save_invoice.php', {
+            method: 'POST',
+            body: formData
+        });
 
-  const saveButtons = document.querySelectorAll('[data-action="save-invoice"]');
-  const form = qs('#invoiceForm');
+        const result = await response.json();
 
-  try {
-    form?.classList.add('loading');
-    saveButtons.forEach(b => b.disabled = true);
-
-    await saveInvoiceApi(formData);
-    showSuccess('Invoice saved successfully');
-    // navigate after success
-    window.location.href = '/Business%20project/public/index.php?page=manage_invoice';
-  } catch (err) {
-    showError(err.message || 'Network error while saving invoice');
-  } finally {
-    form?.classList.remove('loading');
-    saveButtons.forEach(b => b.disabled = false);
-  }
+        if (result.success) {
+            alert('Invoice Saved Successfully!');
+            window.location.href = '/Business project/public/index.php?page=manage-invoice';
+        } else {
+            alert('Error: ' + result.message);
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Save & Generate Invoice";
+        }
+    } catch (error) {
+        console.error('Submission failed:', error);
+        alert('Critical error while saving.');
+        submitBtn.disabled = false;
+    }
 }

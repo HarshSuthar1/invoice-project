@@ -13,16 +13,39 @@ import { qs } from './dom.js';
 export const openModal = (id) => {
   const modal = qs(`#${id}`);
   if (!modal) return;
+  
+  // Handle both .active class and direct style.display
   modal.classList.add('active');
+  modal.style.display = 'flex';
   document.body.style.overflow = 'hidden';
 };
 
 export const closeModal = (id) => {
   const modal = qs(`#${id}`);
   if (!modal) return;
+  
+  // Handle both .active class and direct style.display
   modal.classList.remove('active');
+  modal.style.display = 'none';
   document.body.style.overflow = 'auto';
 };
+
+// Close modal when clicking outside (on the overlay)
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
+    closeModal(e.target.id);
+  }
+});
+
+// Close modal on ESC key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const activeModals = document.querySelectorAll('.modal-overlay.active');
+    activeModals.forEach(modal => {
+      closeModal(modal.id);
+    });
+  }
+});
 
 /* ------------------------
    Toast messages

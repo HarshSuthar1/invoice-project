@@ -44,13 +44,13 @@ async function loadClients() {
 function addRow(client) {
   const tr = document.createElement('tr');
   tr.innerHTML = `
-    <td><h4>${client.company_name}</h4><p>${client.contact_person}</p></td>
-    <td>${client.email}<br><small>${client.phone}</small></td>
-    <td>${client.gst_number}</td>
+    <td><h4>${client.company_name}</h4><p>${client.contact_person || ''}</p></td>
+    <td>${client.email || ''}<br><small>${client.phone || ''}</small></td>
+    <td>${client.gst_number || ''}</td>
     <td>
-      <button class="btn" data-action="view" data-id="${client.id}">View</button>
-      <button class="btn" data-action="edit" data-id="${client.id}">Edit</button>
-      <button class="btn" data-action="delete" data-id="${client.id}">Delete</button>
+      <button class="btn btn-view" data-action="view" data-id="${client.id}">View</button>
+      <button class="btn btn-edit" data-action="edit" data-id="${client.id}">Edit</button>
+      <button class="btn btn-delete" data-action="delete" data-id="${client.id}">Delete</button>
     </td>
   `;
   qs('#clientTableBody').appendChild(tr);
@@ -60,12 +60,14 @@ function addRow(client) {
    Actions
 ------------------------ */
 document.addEventListener('click', (e) => {
-  const { action, id } = e.target.dataset;
+  const { action, id, target } = e.target.dataset;
   if (!action) return;
 
   if (action === 'add-client') {
     isEditMode = false;
+    currentEditId = null;
     qs('#clientForm').reset();
+    qs('#modalTitle').textContent = 'Add New Client';
     openModal('clientModal');
   }
 
@@ -73,6 +75,7 @@ document.addEventListener('click', (e) => {
     fillForm(id);
     isEditMode = true;
     currentEditId = id;
+    qs('#modalTitle').textContent = 'Edit Client';
     openModal('clientModal');
   }
 
@@ -94,8 +97,13 @@ document.addEventListener('click', (e) => {
     }
   }
 
+  if (action === 'close-modal') {
+    if (target) {
+      closeModal(target);
+    }
+  }
+
   if (action === 'submit-client') {
-    // Trigger form submit using modern API if available
     qs('#clientForm')?.requestSubmit ? qs('#clientForm').requestSubmit() : qs('#clientForm')?.dispatchEvent(new Event('submit', {cancelable: true}));
   }
 });
@@ -111,7 +119,7 @@ const filterClients = () => {
 };
 
 /* ------------------------
-   Save client
+   Save client - FIXED
 ------------------------ */
 qs('#clientForm').addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -121,16 +129,25 @@ qs('#clientForm').addEventListener('submit', async (e) => {
 
   if (!required(qs('#companyName').value)) return showError('Company name required');
   if (email && !isEmail(email)) return showError('Invalid email');
-  if (gst && !isGST(gst)) return showError('Invalid GST');
+  if (gst && !isGST(gst)) return showError('Invalid GST format');
 
-  const formData = new FormData(e.target);
-  if (isEditMode) {
-    formData.append('edit', '1');
+  // Create FormData with correct field names (snake_case for API)
+  const formData = new FormData();
+  formData.append('company_name', qs('#companyName').value.trim());
+  formData.append('contact_person', qs('#contactPerson').value.trim());
+  formData.append('email', email);
+  formData.append('phone', qs('#phone').value.trim());
+  formData.append('gst_number', gst);
+  formData.append('address', qs('#address').value.trim());
+  formData.append('notes', qs('#notes').value.trim());
+
+  if (isEditMode && currentEditId) {
     formData.append('id', currentEditId);
   }
 
   const form = qs('#clientForm');
   const saveButtons = document.querySelectorAll('[data-action="submit-client"]');
+  
   try {
     // UI: show loading
     form?.classList.add('loading');
@@ -138,11 +155,17 @@ qs('#clientForm').addEventListener('submit', async (e) => {
 
     await saveClient(formData);
     closeModal('clientModal');
-    showSuccess(isEditMode ? 'Client updated' : 'Client added');
+    showSuccess(isEditMode ? 'Client updated successfully' : 'Client added successfully');
     await loadClients();
+    
+    // Reset form and mode
+    form.reset();
+    isEditMode = false;
+    currentEditId = null;
+    
   } catch (err) {
     console.error(err);
-    showError(err.message || 'Network error');
+    showError(err.message || 'Failed to save client');
   } finally {
     form?.classList.remove('loading');
     saveButtons.forEach(b => b.disabled = false);
@@ -175,10 +198,10 @@ function fillForm(id) {
 }
 
 async function handleDelete(id) {
-  if (!confirm('Delete this client?')) return;
+  if (!confirm('Delete this client? This action cannot be undone.')) return;
   try {
     await deleteClient(id);
-    showSuccess('Client deleted');
+    showSuccess('Client deleted successfully');
     loadClients();
   } catch (err) {
     console.error(err);
