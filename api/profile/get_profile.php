@@ -13,33 +13,50 @@ try {
         ApiResponse::error('Unauthorized', 401);
     }
 
-    $user = Auth::user();
-
-    if (!$user || empty($user['id'])) {
-        ApiResponse::error('User not found', 404);
-    }
-
+    // Get company profile (typically id=1 for single-company setup)
+    // You can also link this to user_id if you want multi-company support
     $stmt = $conn->prepare("
         SELECT 
             id,
-            name,
+            company_name,
+            gst_number,
             email,
             phone,
-            company_name,
-            company_address,
-            gst_number
-        FROM users
-        WHERE id = ?
+            website,
+            pan_number,
+            address,
+            bank_name,
+            account_number,
+            ifsc_code,
+            account_holder_name,
+            branch_name,
+            swift_code,
+            invoice_prefix,
+            default_due_days,
+            invoice_terms,
+            payment_instructions,
+            updated_at
+        FROM company_profile
+        WHERE id = 1
         LIMIT 1
     ");
 
-    $stmt->bind_param("i", $user['id']);
     $stmt->execute();
 
     $profile = $stmt->get_result()->fetch_assoc();
 
     if (!$profile) {
-        ApiResponse::error('Profile not found', 404);
+        // If no profile exists, create a default one
+        $stmt = $conn->prepare("
+            INSERT INTO company_profile (company_name, email) 
+            VALUES ('Your Company Name', 'info@company.com')
+        ");
+        $stmt->execute();
+        
+        // Fetch the newly created profile
+        $stmt = $conn->prepare("SELECT * FROM company_profile WHERE id = LAST_INSERT_ID()");
+        $stmt->execute();
+        $profile = $stmt->get_result()->fetch_assoc();
     }
 
     ApiResponse::success([
