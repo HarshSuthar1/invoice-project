@@ -24,3 +24,5 @@
 @import './pages/login.css';
 @import './pages/signin.css';
 @import './pages/invoice.css';
+@import './pages/create-hub.css';
+@import './pages/create-document.css';

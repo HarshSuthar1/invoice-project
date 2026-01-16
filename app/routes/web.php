@@ -40,8 +40,16 @@ switch ($page) {
     case 'profile':
         require __DIR__ . '/../views/profile.php';
         break;
+    case 'create':
+    case 'create-hub':
+        require __DIR__ . '/../views/create_hub.php';
+        break;
+
+    case 'create-document':
+        require __DIR__ . '/../views/create_document.php';
+        break;
 
     default:
         http_response_code(404);
         echo "Page not found";
-} 
+}
