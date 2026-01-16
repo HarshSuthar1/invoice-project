@@ -26,10 +26,25 @@ switch ($page) {
         break;
 
     case 'invoice':
-        require __DIR__ . '/../views/invoice.php';
+        // Redirect old invoice route to create-hub
+        header('Location: /Business%20project/public/index.php?page=create-hub');
+        exit;
+        break;
+
+    case 'create-hub':
+        require __DIR__ . '/../views/create_hub.php';
+        break;
+
+    case 'create-document':
+        require __DIR__ . '/../views/create_document.php';
         break;
 
     case 'manage-invoice':
+        require __DIR__ . '/../views/manage_invoice.php';
+        break;
+
+    case 'manage-documents':
+        // New unified document management (use manage_invoice for now)
         require __DIR__ . '/../views/manage_invoice.php';
         break;
 
@@ -40,16 +55,8 @@ switch ($page) {
     case 'profile':
         require __DIR__ . '/../views/profile.php';
         break;
-    case 'create':
-    case 'create-hub':
-        require __DIR__ . '/../views/create_hub.php';
-        break;
-
-    case 'create-document':
-        require __DIR__ . '/../views/create_document.php';
-        break;
 
     default:
         http_response_code(404);
         echo "Page not found";
-}
+} 
