@@ -10,6 +10,7 @@ $docTitle = $docTitles[$docType] ?? 'Invoice';
 $showTax = !in_array($docType, ['bill-no-gst', 'quotation', 'challan']);
 $isChallan = $docType === 'challan';
 $isInvoice = $docType === 'invoice';
+$showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -84,6 +85,117 @@ $isInvoice = $docType === 'invoice';
         .tax-column {
             display: <?php echo $showTax ? 'table-cell' : 'none'; ?>;
         }
+
+        .image-column {
+            display: <?php echo $showImageColumn ? 'table-cell' : 'none'; ?>;
+        }
+
+        /* Item Image Paste Area */
+        .item-image-paste {
+            position: relative;
+            min-width: 120px;
+            width: 120px;
+        }
+
+        .image-paste-box {
+            width: 100px;
+            height: 100px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f9fafb;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .image-paste-box:hover {
+            border-color: #3b82f6;
+            background: #f0f9ff;
+        }
+
+        .image-paste-box.has-image {
+            border-style: solid;
+            border-color: #10b981;
+            padding: 0;
+        }
+
+        .paste-icon {
+            color: #9ca3af;
+            font-size: 12px;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .paste-icon svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+
+        .item-image-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: none;
+        }
+
+        .item-image-preview.show {
+            display: block;
+        }
+
+        .remove-item-image {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .image-paste-box.has-image .remove-item-image {
+            display: flex;
+        }
+
+        .remove-item-image:hover {
+            background: #dc2626;
+        }
+
+        /* Hidden file input */
+        .item-image-file-input {
+            display: none;
+        }
+
+        /* Help text */
+        .image-help {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        .image-help p {
+            margin: 0;
+            font-size: 14px;
+            color: #1e40af;
+        }
+
+        .image-help strong {
+            font-weight: 600;
+        }
     </style>
 </head>
 
@@ -135,6 +247,12 @@ $isInvoice = $docType === 'invoice';
                     </div>
                 </div>
 
+                <?php if ($showImageColumn): ?>
+                <div class="image-help">
+                    <p>📸 <strong>Tip:</strong> Click on the image box in each row and press <strong>Ctrl+V</strong> to paste product images directly from clipboard!</p>
+                </div>
+                <?php endif; ?>
+
                 <!-- Items Table -->
                 <div class="table-container">
                     <table class="invoice-table">
@@ -156,6 +274,9 @@ $isInvoice = $docType === 'invoice';
                                     <th>Unit Price</th>
                                     <th class="tax-column">Tax (%)</th>
                                     <th>Amount</th>
+                                    <?php if ($showImageColumn): ?>
+                                    <th class="image-column" style="width: 130px;">Image</th>
+                                    <?php endif; ?>
                                     <th>Action</th>
                                 <?php endif; ?>
                             </tr>
@@ -249,6 +370,115 @@ let itemIndex = 0;
 const currentDocType = '<?php echo $docType; ?>';
 const isChallan = currentDocType === 'challan';
 const showTax = !['bill-no-gst', 'quotation', 'challan'].includes(currentDocType);
+const showImageColumn = ['quotation', 'bill-no-gst'].includes(currentDocType);
+
+/* -----------------------------
+   Image Resize Function
+------------------------------ */
+function resizeImage(base64Str, maxWidth = 300, maxHeight = 300) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let width = img.width;
+      let height = img.height;
+
+      // Calculate new dimensions while maintaining aspect ratio
+      if (width > height) {
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+      }
+
+      canvas.width = width;
+      canvas.height = height;
+
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+
+      // Convert to base64 with compression
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.src = base64Str;
+  });
+}
+
+/* -----------------------------
+   Setup Item Image Paste
+------------------------------ */
+function setupItemImagePaste(row) {
+  if (!showImageColumn) return;
+
+  const pasteBox = row.querySelector('.image-paste-box');
+  const preview = row.querySelector('.item-image-preview');
+  const pasteIcon = row.querySelector('.paste-icon');
+  const removeBtn = row.querySelector('.remove-item-image');
+  const fileInput = row.querySelector('.item-image-file-input');
+
+  // Handle paste
+  pasteBox.addEventListener('paste', async (e) => {
+    e.preventDefault();
+    const items = e.clipboardData.items;
+    
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const blob = items[i].getAsFile();
+        await handleItemImage(blob, pasteBox, preview, pasteIcon);
+        break;
+      }
+    }
+  });
+
+  // Handle click to browse
+  pasteBox.addEventListener('click', (e) => {
+    if (!pasteBox.classList.contains('has-image')) {
+      fileInput.click();
+    }
+  });
+
+  // Handle file input
+  fileInput.addEventListener('change', async (e) => {
+    if (e.target.files && e.target.files[0]) {
+      await handleItemImage(e.target.files[0], pasteBox, preview, pasteIcon);
+    }
+  });
+
+  // Remove image
+  removeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    preview.src = '';
+    preview.classList.remove('show');
+    pasteIcon.style.display = 'block';
+    pasteBox.classList.remove('has-image');
+    pasteBox.dataset.imageData = '';
+  });
+
+  async function handleItemImage(file, box, img, icon) {
+    if (!file.type.startsWith('image/')) {
+      showError('Please paste/select an image file');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      // Resize the image before storing
+      const resizedBase64 = await resizeImage(e.target.result, 300, 300);
+      
+      img.src = resizedBase64;
+      img.classList.add('show');
+      icon.style.display = 'none';
+      box.classList.add('has-image');
+      box.dataset.imageData = resizedBase64;
+    };
+    reader.readAsDataURL(file);
+  }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const today = new Date().toISOString().split('T')[0];
@@ -293,7 +523,6 @@ function addItemRow(data = null) {
   row.dataset.index = itemIndex++;
 
   if (isChallan) {
-    // Simplified challan row: Date, Description, Rounds, Amount
     row.innerHTML = `
       <td><input type="date" class="row-date" value="${data?.date || ''}" required></td>
       <td><textarea class="desc" rows="2" placeholder="e.g., Ahmedabad → Mumbai" required>${data?.description || ''}</textarea></td>
@@ -302,8 +531,26 @@ function addItemRow(data = null) {
       <td><button type="button" class="btn-delete btn" data-action="remove-item">×</button></td>
     `;
   } else {
-    // Standard row for other documents
     const hsnCell = showTax ? `<td><input type="text" class="hsn" value="${data?.hsn || ''}" placeholder="e.g., 7308"></td>` : '';
+    const imageCell = showImageColumn ? `
+      <td class="image-column">
+        <div class="item-image-paste">
+          <div class="image-paste-box" tabindex="0" data-image-data="">
+            <div class="paste-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <div style="font-size: 10px;">Paste</div>
+            </div>
+            <img class="item-image-preview" src="" alt="Item">
+            <button type="button" class="remove-item-image">×</button>
+          </div>
+          <input type="file" class="item-image-file-input" accept="image/*">
+        </div>
+      </td>
+    ` : '';
+    
     row.innerHTML = `
       <td><input type="text" class="desc" value="${data?.description || ''}" required></td>
       ${hsnCell}
@@ -312,11 +559,18 @@ function addItemRow(data = null) {
       <td><input type="number" class="price" value="${data?.price || 0}" min="0" step="0.01"></td>
       <td class="tax-column"><input type="number" class="tax" value="${data?.tax || 0}" min="0" max="100" step="0.01"></td>
       <td class="lineTotal">₹0.00</td>
+      ${imageCell}
       <td><button type="button" class="btn-delete btn" data-action="remove-item">×</button></td>
     `;
   }
 
   tbody.appendChild(row);
+  
+  // Setup image paste for this row
+  if (showImageColumn) {
+    setupItemImagePaste(row);
+  }
+  
   calculateTotals();
 }
 
@@ -330,11 +584,9 @@ function calculateTotals() {
     const price = Number(row.querySelector('.price').value) || 0;
     
     if (isChallan) {
-      // For challan: simple multiplication (rounds × amount)
       const lineAmount = qty * price;
       total += lineAmount;
     } else {
-      // For other documents: calculate with tax
       const taxRate = showTax ? (Number(row.querySelector('.tax')?.value) || 0) : 0;
       const lineAmount = qty * price;
       const taxAmount = (lineAmount * taxRate) / 100;
@@ -351,7 +603,6 @@ function calculateTotals() {
     qs('#subtotal').textContent = formatCurrency(subtotal);
     
     if (showTax) {
-      // Split tax into CGST and SGST (half each for intra-state)
       const cgst = taxTotal / 2;
       const sgst = taxTotal / 2;
       qs('#cgst').textContent = formatCurrency(cgst);
@@ -508,14 +759,24 @@ async function saveDocument() {
         tax: 0
       });
     } else {
-      items.push({
+      const itemData = {
         description: desc,
         hsn_code: showTax ? (row.querySelector('.hsn')?.value || '') : '',
         quantity: row.querySelector('.qty').value,
         unit: row.querySelector('.unit').value,
         price: row.querySelector('.price').value,
         tax: showTax ? (row.querySelector('.tax')?.value || 0) : 0
-      });
+      };
+      
+      // Add image if present
+      if (showImageColumn) {
+        const imageBox = row.querySelector('.image-paste-box');
+        if (imageBox && imageBox.dataset.imageData) {
+          itemData.image = imageBox.dataset.imageData;
+        }
+      }
+      
+      items.push(itemData);
     }
   });
 

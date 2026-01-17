@@ -13,30 +13,13 @@ try {
     }
 
     $document_id = (int) $_GET['id'];
-    $type = $_GET['type'] ?? 'invoice';
 
-    $table_name = match($type) {
-        'quotation' => 'quotations',
-        'bill-no-gst' => 'bills',
-        'invoice' => 'invoices',
-        'challan' => 'challans',
-        default => 'invoices'
-    };
-
-    $items_table = match($type) {
-        'quotation' => 'quotation_items',
-        'bill-no-gst' => 'bill_items',
-        'invoice' => 'invoice_items',
-        'challan' => 'challan_items',
-        default => 'invoice_items'
-    };
-
-    // Get document details
+    // Get document details from invoices table
     $stmt = $conn->prepare("
-        SELECT d.*, c.company_name as client_name
-        FROM {$table_name} d
-        LEFT JOIN clients c ON d.client_id = c.id
-        WHERE d.id = ?
+        SELECT i.*, c.company_name as client_name
+        FROM invoices i
+        LEFT JOIN clients c ON i.client_id = c.id
+        WHERE i.id = ?
     ");
     $stmt->bind_param("i", $document_id);
     $stmt->execute();
@@ -47,11 +30,11 @@ try {
         ApiResponse::error('Document not found', 404);
     }
 
-    // Get document items
+    // Get document items from invoice_items table
     $stmt = $conn->prepare("
         SELECT *
-        FROM {$items_table}
-        WHERE document_id = ?
+        FROM invoice_items
+        WHERE invoice_id = ?
     ");
     $stmt->bind_param("i", $document_id);
     $stmt->execute();

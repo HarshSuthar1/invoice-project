@@ -8,31 +8,34 @@ require_once '../../app/bootstrap.php';
 ApiAuth::requireLogin();
 
 try {
-    $type = $_GET['type'] ?? 'invoice'; // quotation, bill-no-gst, invoice, challan
+    $type = $_GET['type'] ?? 'invoice';
     
-    $table_name = match($type) {
-        'quotation' => 'quotations',
-        'bill-no-gst' => 'bills',
-        'invoice' => 'invoices',
-        'challan' => 'challans',
-        default => 'invoices'
+    // All document types use the invoices table for now
+    // Filter by prefix in invoice_number
+    $prefix = match($type) {
+        'quotation' => 'QT',
+        'bill-no-gst' => 'BL',
+        'invoice' => 'INV',
+        'challan' => 'CH',
+        default => 'INV'
     };
 
     $documents = [];
 
     $sql = "
         SELECT 
-            d.id,
-            d.document_number,
+            i.id,
+            i.invoice_number as document_number,
             c.company_name AS client_name,
-            d.document_date,
-            d.grand_total,
-            d.amount_received,
-            d.status,
-            d.created_at
-        FROM {$table_name} d
-        LEFT JOIN clients c ON d.client_id = c.id
-        ORDER BY d.created_at DESC
+            i.invoice_date as document_date,
+            i.grand_total,
+            i.amount_received,
+            i.status,
+            i.created_at
+        FROM invoices i
+        LEFT JOIN clients c ON i.client_id = c.id
+        WHERE i.invoice_number LIKE '{$prefix}%'
+        ORDER BY i.created_at DESC
     ";
 
     $result = $conn->query($sql);
