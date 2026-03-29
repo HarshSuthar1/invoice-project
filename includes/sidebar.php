@@ -2,6 +2,16 @@
 $current = $_GET['page'] ?? 'dashboard';
 ?>
 
+<!-- Apply stored theme IMMEDIATELY (before any CSS renders) to prevent white flash -->
+<script>
+(function () {
+    try {
+        var t = localStorage.getItem('theme');
+        document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+    } catch (e) { /* localStorage blocked – default light theme is fine */ }
+})();
+</script>
+
 <div class="sidebar">
     <div class="sidebar-header">
         <h1>Invoice App</h1>

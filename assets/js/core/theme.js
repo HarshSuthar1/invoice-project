@@ -1,69 +1,75 @@
-const THEME_STORAGE_KEY = 'theme';
-const LIGHT_THEME = 'light';
-const DARK_THEME = 'dark';
+/*
+  theme.js
+  Handles dark / light mode toggle.
 
-const getStoredTheme = () => {
-    try {
-        const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-        return savedTheme === DARK_THEME ? DARK_THEME : LIGHT_THEME;
-    } catch (error) {
-        return LIGHT_THEME;
-    }
-};
+  The stored key is 'theme'; values are 'dark' | 'light'.
+  The data-theme attribute is set on <html> so CSS variables
+  defined under html[data-theme="dark"] kick in automatically.
 
-const getNextTheme = (currentTheme) => (
-    currentTheme === DARK_THEME ? LIGHT_THEME : DARK_THEME
-);
+  FOUC prevention lives in sidebar.php (inline script that reads
+  localStorage synchronously before the page body renders).
+*/
 
-const updateToggleButton = (theme) => {
-    const toggleButton = document.getElementById('darkModeToggle');
-    const icon = document.getElementById('darkModeIcon');
+const THEME_KEY  = 'theme';
+const DARK       = 'dark';
+const LIGHT      = 'light';
+
+/* ── helpers ───────────────────────────────────────────── */
+
+function stored() {
+    try   { return localStorage.getItem(THEME_KEY) === DARK ? DARK : LIGHT; }
+    catch { return LIGHT; }
+}
+
+function save(theme) {
+    try   { localStorage.setItem(THEME_KEY, theme); }
+    catch { /* private / blocked storage – ignore */ }
+}
+
+function current() {
+    return document.documentElement.getAttribute('data-theme') === DARK ? DARK : LIGHT;
+}
+
+/* ── DOM update ─────────────────────────────────────────── */
+
+function syncButton(theme) {
+    const btn   = document.getElementById('darkModeToggle');
+    const icon  = document.getElementById('darkModeIcon');
     const label = document.getElementById('darkModeLabel');
-    const isDark = theme === DARK_THEME;
 
-    if (!toggleButton) {
-        return;
-    }
+    if (!btn) return;   // login / signup pages have no sidebar
 
-    toggleButton.setAttribute('aria-pressed', String(isDark));
-    toggleButton.setAttribute(
-        'aria-label',
-        isDark ? 'Switch to light mode' : 'Switch to dark mode'
-    );
-    toggleButton.setAttribute(
-        'title',
-        isDark ? 'Switch to light mode' : 'Switch to dark mode'
-    );
+    const isDark = theme === DARK;
 
-    if (icon) {
-        icon.textContent = isDark ? '\u2600' : '\u263E';
-    }
+    btn.setAttribute('aria-pressed', String(isDark));
+    btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    btn.title = btn.getAttribute('aria-label');
 
-    if (label) {
-        label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
-    }
-};
+    if (icon)  icon.textContent  = isDark ? '\u2600' : '\u263E';   // ☀ / ☾
+    if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+}
 
-const applyTheme = (theme) => {
-    const resolvedTheme = theme === DARK_THEME ? DARK_THEME : LIGHT_THEME;
+function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    syncButton(theme);
+}
 
-    document.documentElement.setAttribute('data-theme', resolvedTheme);
-    updateToggleButton(resolvedTheme);
-};
+/* ── public API ─────────────────────────────────────────── */
 
-export const initTheme = () => {
-    applyTheme(getStoredTheme());
-};
+/**
+ * Call once on page load: reads localStorage and syncs the button label.
+ * The attribute is already set by the inline FOUC-prevention script in
+ * sidebar.php, so this only needs to update the button UI.
+ */
+export function initTheme() {
+    applyTheme(stored());
+}
 
-export const toggleTheme = () => {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || LIGHT_THEME;
-    const nextTheme = getNextTheme(currentTheme);
-
-    applyTheme(nextTheme);
-
-    try {
-        window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-    } catch (error) {
-        /* Ignore storage failures and keep the current page state. */
-    }
-};
+/**
+ * Toggle between light ↔ dark, persist the choice, and update the button.
+ */
+export function toggleTheme() {
+    const next = current() === DARK ? LIGHT : DARK;
+    applyTheme(next);
+    save(next);
+}
