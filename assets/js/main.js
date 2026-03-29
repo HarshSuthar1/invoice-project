@@ -1,7 +1,21 @@
 /*
 main.js
 Global UI behavior shared across all pages
-Note: Modal closing functionality is now handled in ui.js
 */
+import { initTheme, toggleTheme } from './core/theme.js';
 
-console.log('[main.js] Loaded - Global event handlers initialized');
+const initializeApp = () => {
+    initTheme();
+
+    const darkModeToggle = document.getElementById('darkModeToggle');
+
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('click', toggleTheme);
+    }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp, { once: true });
+} else {
+    initializeApp();
+}

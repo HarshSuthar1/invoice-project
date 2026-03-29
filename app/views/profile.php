@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/Business%20project/assets/css/app.css">
+    <link rel="stylesheet" href="/Business%20project/assets/css/app.css?v=20260328c">
     <title>Company Profile Settings</title>
 </head>
 
@@ -201,7 +201,7 @@
         ✗ Failed to save settings!
     </div>
 
-
+    <script type="module" src="/Business%20project/assets/js/main.js"></script>
     <script type="module" src="/Business%20project/assets/js/pages/profile.js"></script>
 </body>
 

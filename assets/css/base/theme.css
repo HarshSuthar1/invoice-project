@@ -1,0 +1,197 @@
+/* ============================================================================
+   THEME OVERRIDES - Loaded after page CSS so variables win everywhere
+   ============================================================================ */
+
+.main-content {
+    background-color: var(--main-content-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.page-header h1,
+.page-header h2,
+.page-title-section h2,
+.section-header-bar h2,
+.header h1,
+.company-preview,
+.document-number,
+.client-name,
+.detail-group .value,
+.client-details h4,
+.detail-value,
+.kpi-value,
+.amount,
+.stat-value,
+.summary-item span:last-child,
+.summary-total span,
+.modal-header h3 {
+    color: var(--text-heading);
+}
+
+.page-header p,
+.page-title-section p,
+.header p,
+.document-card p,
+.kpi-label,
+.kpi-subtitle,
+.loading-state,
+.empty-state p,
+.card-info-row,
+.detail-label,
+.loading,
+.help-text,
+.company-details,
+.summary-item span:first-child,
+.stat-title,
+.stat-trend span,
+.client-details p,
+.client-info p,
+.close-button {
+    color: var(--text-muted);
+}
+
+.client-card,
+.invoice-card,
+.settings-card,
+.section,
+.section-card,
+.stat-card,
+.kpi-card,
+.filter-bar,
+.document-card,
+.empty-state,
+.modal-content,
+.detail-group,
+.summary-section,
+.preview-content,
+.client-detail-card,
+.import-section,
+.image-paste-box,
+.btn-back {
+    background-color: var(--surface-color);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    box-shadow: var(--card-shadow);
+}
+
+.invoice-table,
+.client-table,
+.items-table,
+table {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.invoice-table thead,
+.client-table thead,
+.items-table thead,
+table thead {
+    background-color: var(--surface-subtle);
+    border-color: var(--border-color);
+}
+
+.invoice-table th,
+.client-table th,
+.items-table th,
+table th {
+    color: var(--text-muted);
+    border-color: var(--border-color);
+}
+
+.invoice-table td,
+.client-table td,
+.items-table td,
+table td {
+    color: var(--text-primary);
+    border-color: var(--border-soft);
+}
+
+.invoice-table tbody tr,
+.client-table tbody tr,
+.items-table tbody tr,
+table tbody tr,
+.detail-row,
+.modal-header,
+.modal-buttons {
+    border-color: var(--border-soft);
+}
+
+.invoice-table tbody tr:hover,
+.client-table tbody tr:hover,
+.items-table tbody tr:hover,
+table tbody tr:hover {
+    background-color: var(--table-row-hover);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+.filter-bar input,
+.filter-bar select,
+.modal-form .form-group input,
+.modal-form .form-group textarea,
+.search-box,
+.filter-section input,
+.filter-section select {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.filter-bar input::placeholder,
+.search-box::placeholder {
+    color: var(--text-muted);
+}
+
+.close-button:hover {
+    background-color: var(--surface-subtle);
+    color: var(--text-primary);
+}
+
+.modal-button.cancel {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.modal-button.cancel:hover {
+    background-color: var(--surface-subtle);
+}
+
+html[data-theme="dark"] .image-help {
+    background-color: var(--surface-muted);
+    border-left-color: var(--sidebar-active);
+}
+
+html[data-theme="dark"] .image-help p {
+    color: var(--text-primary);
+}
+
+.stat-card,
+.section-card,
+.dashboard-grid .stat-card {
+    background-color: var(--surface-color) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.stat-value,
+.stat-title {
+    color: var(--text-heading) !important;
+}
+
+.stat-trend span {
+    color: var(--text-muted) !important;
+}
+
+.invoice-table thead th {
+    color: var(--text-muted) !important;
+    border-color: var(--border-color) !important;
+}
+
+.invoice-table tbody td {
+    color: var(--text-primary) !important;
+    border-color: var(--border-soft) !important;
+}

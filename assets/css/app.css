@@ -3,26 +3,29 @@
 @import url('https://fonts.googleapis.com/css?family=Karla');
 
 /* Base layer - resets, typography, variables */
-@import './base/base_styling.css';
+@import './base/base_styling.css?v=20260328d';
 
 /* Components */
-@import './components/buttons.css';
-@import './components/modal.css';
-@import './components/forms.css';
-@import './components/toasts.css';
-@import './components/utilities.css';
+@import './components/buttons.css?v=20260328c';
+@import './components/modal.css?v=20260328c';
+@import './components/forms.css?v=20260328c';
+@import './components/toasts.css?v=20260328c';
+@import './components/utilities.css?v=20260328c';
 
 /* Layouts (none moved yet) */
 /* @import './layouts/sidebar.css'; */
 
 /* Pages */
-@import './pages/clients.css';
-@import './pages/dashboard.css';
-@import './pages/manage_invoice.css';
-@import './pages/reports.css';
-@import './pages/profile.css';
-@import './pages/login.css';
-@import './pages/signin.css';
-@import './pages/invoice.css';
-@import './pages/create-hub.css';
-@import './pages/create-document.css';
+@import './pages/clients.css?v=20260328c';
+@import './pages/dashboard.css?v=20260328c';
+@import './pages/manage_invoice.css?v=20260328c';
+@import './pages/reports.css?v=20260328c';
+@import './pages/profile.css?v=20260328c';
+@import './pages/login.css?v=20260328c';
+@import './pages/signin.css?v=20260328c';
+@import './pages/invoice.css?v=20260328c';
+@import './pages/create-hub.css?v=20260328c';
+@import './pages/create-document.css?v=20260328c';
+
+/* Theme overrides loaded last so page-level colors use variables */
+@import './base/theme.css?v=20260328d';
