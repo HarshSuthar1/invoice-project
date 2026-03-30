@@ -2,13 +2,61 @@
 $current = $_GET['page'] ?? 'dashboard';
 ?>
 
-<!-- Apply stored theme IMMEDIATELY (before any CSS renders) to prevent white flash -->
 <script>
+/* ============================================================
+   DARK MODE — fully self-contained, no ES module dependency.
+   Runs synchronously so data-theme is set before first paint,
+   then wires up the click handler once the button exists.
+   ============================================================ */
 (function () {
-    try {
-        var t = localStorage.getItem('theme');
-        document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
-    } catch (e) { /* localStorage blocked – default light theme is fine */ }
+    var DARK = 'dark', LIGHT = 'light';
+
+    function storedTheme() {
+        try { return localStorage.getItem('theme') === DARK ? DARK : LIGHT; }
+        catch (e) { return LIGHT; }
+    }
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+
+        var btn   = document.getElementById('darkModeToggle');
+        var icon  = document.getElementById('darkModeIcon');
+        var label = document.getElementById('darkModeLabel');
+
+        if (!btn) return;
+
+        var isDark = (theme === DARK);
+        btn.setAttribute('aria-pressed', String(isDark));
+        btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+        btn.title = btn.getAttribute('aria-label');
+        if (icon)  icon.textContent  = isDark ? '\u2600' : '\u263E';  /* ☀ / ☾ */
+        if (label) label.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+    }
+
+    function wireToggle() {
+        var btn = document.getElementById('darkModeToggle');
+        if (!btn) return;
+
+        /* Sync visual state of the button */
+        applyTheme(storedTheme());
+
+        btn.addEventListener('click', function () {
+            var current = document.documentElement.getAttribute('data-theme');
+            var next = (current === DARK) ? LIGHT : DARK;
+            applyTheme(next);
+            try { localStorage.setItem('theme', next); } catch (e) {}
+        });
+    }
+
+    /* Step 1: Set data-theme on <html> immediately — prevents flash */
+    document.documentElement.setAttribute('data-theme', storedTheme());
+
+    /* Step 2: Wire the button once the DOM has the button in it */
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', wireToggle);
+    } else {
+        wireToggle();
+    }
 })();
 </script>
 
