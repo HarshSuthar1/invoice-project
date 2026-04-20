@@ -1,0 +1,462 @@
+/* ============================================================================
+   THEME OVERRIDES - Loaded after page CSS so variables win everywhere
+   ============================================================================ */
+
+.main-content {
+    background-color: var(--main-content-bg) !important;
+    color: var(--text-primary) !important;
+}
+
+.page-header h1,
+.page-header h2,
+.page-title-section h2,
+.section-header-bar h2,
+.header h1,
+.company-preview,
+.document-number,
+.client-name,
+.detail-group .value,
+.client-details h4,
+.detail-value,
+.kpi-value,
+.amount,
+.stat-value,
+.summary-item span:last-child,
+.summary-total span,
+.modal-header h3 {
+    color: var(--text-heading);
+}
+
+.page-header p,
+.page-title-section p,
+.header p,
+.document-card p,
+.kpi-label,
+.kpi-subtitle,
+.loading-state,
+.empty-state p,
+.card-info-row,
+.detail-label,
+.loading,
+.help-text,
+.company-details,
+.summary-item span:first-child,
+.stat-title,
+.stat-trend span,
+.client-details p,
+.client-info p,
+.close-button {
+    color: var(--text-muted);
+}
+
+.client-card,
+.invoice-card,
+.settings-card,
+.section,
+.section-card,
+.stat-card,
+.kpi-card,
+.filter-bar,
+.document-card,
+.empty-state,
+.modal-content,
+.detail-group,
+.summary-section,
+.preview-content,
+.client-detail-card,
+.import-section,
+.image-paste-box,
+.btn-back {
+    background-color: var(--surface-color);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    box-shadow: var(--card-shadow);
+}
+
+.invoice-table,
+.client-table,
+.items-table,
+table {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.invoice-table thead,
+.client-table thead,
+.items-table thead,
+table thead {
+    background-color: var(--surface-subtle);
+    border-color: var(--border-color);
+}
+
+.invoice-table th,
+.client-table th,
+.items-table th,
+table th {
+    color: var(--text-muted);
+    border-color: var(--border-color);
+}
+
+.invoice-table td,
+.client-table td,
+.items-table td,
+table td {
+    color: var(--text-primary);
+    border-color: var(--border-soft);
+}
+
+.invoice-table tbody tr,
+.client-table tbody tr,
+.items-table tbody tr,
+table tbody tr,
+.detail-row,
+.modal-header,
+.modal-buttons {
+    border-color: var(--border-soft);
+}
+
+.invoice-table tbody tr:hover,
+.client-table tbody tr:hover,
+.items-table tbody tr:hover,
+table tbody tr:hover {
+    background-color: var(--table-row-hover);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+.filter-bar input,
+.filter-bar select,
+.modal-form .form-group input,
+.modal-form .form-group textarea,
+.search-box,
+.search-input,
+.invoice-table td input,
+.invoice-table td select,
+.invoice-table td textarea,
+.filter-section input,
+.filter-section select {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+    color-scheme: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.filter-bar input:focus,
+.filter-bar select:focus,
+.modal-form .form-group input:focus,
+.modal-form .form-group textarea:focus,
+.search-box:focus,
+.search-input:focus,
+.filter-section input:focus,
+.filter-section select:focus {
+    background-color: var(--surface-color) !important;
+    color: var(--text-primary);
+    border-color: var(--sidebar-active);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.invoice-table td input:focus,
+.invoice-table td select:focus,
+.invoice-table td textarea:focus {
+    background-color: var(--surface-color) !important;
+    color: var(--text-primary);
+}
+
+#documentForm input:not([type="hidden"]),
+#documentForm select,
+#documentForm textarea,
+#documentItemsBody input,
+#documentItemsBody select,
+#documentItemsBody textarea {
+    background-color: var(--surface-color) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+    -webkit-text-fill-color: var(--text-primary);
+}
+
+#documentForm input:not([type="hidden"]):focus,
+#documentForm select:focus,
+#documentForm textarea:focus,
+#documentItemsBody input:focus,
+#documentItemsBody select:focus,
+#documentItemsBody textarea:focus {
+    background-color: var(--surface-color) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--sidebar-active) !important;
+}
+
+html[data-theme="dark"] #documentForm select option,
+html[data-theme="dark"] #documentForm select optgroup {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+}
+
+html[data-theme="dark"] #documentForm input:-webkit-autofill,
+html[data-theme="dark"] #documentForm input:-webkit-autofill:hover,
+html[data-theme="dark"] #documentForm input:-webkit-autofill:focus,
+html[data-theme="dark"] #documentForm textarea:-webkit-autofill,
+html[data-theme="dark"] #documentForm select:-webkit-autofill {
+    -webkit-text-fill-color: var(--text-primary);
+    -webkit-box-shadow: 0 0 0 1000px var(--surface-color) inset;
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.filter-bar input::placeholder,
+.search-box::placeholder {
+    color: var(--text-muted);
+}
+
+.close-button:hover {
+    background-color: var(--surface-subtle);
+    color: var(--text-primary);
+}
+
+.modal-button.cancel {
+    background-color: var(--surface-color);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.modal-button.cancel:hover {
+    background-color: var(--surface-subtle);
+}
+
+html[data-theme="dark"] .image-help {
+    background-color: var(--surface-muted);
+    border-left-color: var(--sidebar-active);
+}
+
+html[data-theme="dark"] .image-help p {
+    color: var(--text-primary);
+}
+
+.stat-card,
+.section-card,
+.dashboard-grid .stat-card {
+    background-color: var(--surface-color) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+}
+
+.stat-value,
+.stat-title {
+    color: var(--text-heading) !important;
+}
+
+.stat-trend span {
+    color: var(--text-muted) !important;
+}
+
+.invoice-table thead th {
+    color: var(--text-muted) !important;
+    border-color: var(--border-color) !important;
+}
+
+.invoice-table tbody td {
+    color: var(--text-primary) !important;
+    border-color: var(--border-soft) !important;
+}
+
+html[data-theme="dark"] .filter-bar,
+html[data-theme="dark"] .empty-state,
+html[data-theme="dark"] .documents-grid .document-card,
+html[data-theme="dark"] .document-type-grid .document-card,
+html[data-theme="dark"] .document-cards-grid .document-card,
+html[data-theme="dark"] .quick-stats,
+html[data-theme="dark"] .card-options,
+html[data-theme="dark"] .quotation-item,
+html[data-theme="dark"] .items-table,
+html[data-theme="dark"] .summary-section,
+html[data-theme="dark"] .detail-group {
+    background-color: var(--surface-color) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+    box-shadow: var(--card-shadow) !important;
+}
+
+html[data-theme="dark"] .filter-bar {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0));
+}
+
+html[data-theme="dark"] .documents-grid .document-card:hover,
+html[data-theme="dark"] .document-type-grid .document-card:hover,
+html[data-theme="dark"] .document-cards-grid .document-card:hover,
+html[data-theme="dark"] .quotation-item:hover,
+html[data-theme="dark"] .quotation-item.selected {
+    border-color: var(--sidebar-active) !important;
+    box-shadow: 0 18px 40px rgba(2, 6, 23, 0.38) !important;
+}
+
+html[data-theme="dark"] .quotation-item:hover,
+html[data-theme="dark"] .quotation-item.selected,
+html[data-theme="dark"] .documents-grid .document-card:hover,
+html[data-theme="dark"] .document-type-grid .document-card:hover,
+html[data-theme="dark"] .document-cards-grid .document-card:hover {
+    background-color: #243247 !important;
+}
+
+html[data-theme="dark"] .page-header h2,
+html[data-theme="dark"] .page-title-section h2,
+html[data-theme="dark"] .document-card h3,
+html[data-theme="dark"] .document-number,
+html[data-theme="dark"] .client-name,
+html[data-theme="dark"] .card-info-row strong,
+html[data-theme="dark"] .document-amount,
+html[data-theme="dark"] .quick-stats h3,
+html[data-theme="dark"] .quotation-number,
+html[data-theme="dark"] .quotation-amount,
+html[data-theme="dark"] .summary-row,
+html[data-theme="dark"] .summary-row.total,
+html[data-theme="dark"] .empty-state h3 {
+    color: var(--text-heading) !important;
+}
+
+html[data-theme="dark"] .page-header p,
+html[data-theme="dark"] .page-title-section p,
+html[data-theme="dark"] .document-card p,
+html[data-theme="dark"] .card-info-row,
+html[data-theme="dark"] .loading-state,
+html[data-theme="dark"] .empty-state p,
+html[data-theme="dark"] .modal-description,
+html[data-theme="dark"] .quotation-client,
+html[data-theme="dark"] .quotation-date,
+html[data-theme="dark"] .stat-label {
+    color: var(--text-muted) !important;
+}
+
+html[data-theme="dark"] .status-amount-row,
+html[data-theme="dark"] .summary-row.total,
+html[data-theme="dark"] .items-table th,
+html[data-theme="dark"] .items-table td {
+    border-color: var(--border-soft) !important;
+}
+
+html[data-theme="dark"] .items-table th,
+html[data-theme="dark"] .stat-item {
+    background-color: var(--surface-subtle) !important;
+    color: var(--text-primary) !important;
+}
+
+html[data-theme="dark"] .stat-item {
+    border-left-color: var(--sidebar-active) !important;
+    background-image: linear-gradient(135deg, rgba(59, 130, 246, 0.08), rgba(15, 23, 42, 0.16)) !important;
+}
+
+html[data-theme="dark"] .document-type-badge,
+html[data-theme="dark"] .status-badge {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .type-quotation {
+    background: rgba(96, 165, 250, 0.16) !important;
+    color: #bfdbfe !important;
+}
+
+html[data-theme="dark"] .type-invoice,
+html[data-theme="dark"] .status-paid {
+    background: rgba(16, 185, 129, 0.16) !important;
+    color: #a7f3d0 !important;
+}
+
+html[data-theme="dark"] .type-bill,
+html[data-theme="dark"] .status-partially-paid {
+    background: rgba(245, 158, 11, 0.16) !important;
+    color: #fde68a !important;
+}
+
+html[data-theme="dark"] .type-challan {
+    background: rgba(129, 140, 248, 0.16) !important;
+    color: #c7d2fe !important;
+}
+
+html[data-theme="dark"] .status-unpaid {
+    background: rgba(239, 68, 68, 0.16) !important;
+    color: #fecaca !important;
+}
+
+html[data-theme="dark"] .document-amount,
+html[data-theme="dark"] .quotation-amount,
+html[data-theme="dark"] .stat-value {
+    color: #6ee7b7 !important;
+}
+
+html[data-theme="dark"] .select-btn,
+html[data-theme="dark"] .card-button {
+    box-shadow: 0 10px 24px rgba(76, 104, 214, 0.28) !important;
+}
+
+html[data-theme="dark"] #viewModal.modal-overlay {
+    background-color: rgba(2, 6, 23, 0.72) !important;
+    backdrop-filter: blur(4px);
+}
+
+html[data-theme="dark"] #viewModal .modal-content {
+    background: var(--surface-color) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 24px 60px rgba(2, 6, 23, 0.45) !important;
+}
+
+html[data-theme="dark"] #viewModal .modal-header,
+html[data-theme="dark"] #viewModal .modal-buttons {
+    border-color: var(--border-soft) !important;
+}
+
+html[data-theme="dark"] #viewModal .modal-header h3,
+html[data-theme="dark"] #viewModal .close-button,
+html[data-theme="dark"] #viewModal .detail-group .value,
+html[data-theme="dark"] #viewModal .items-table td,
+html[data-theme="dark"] #viewModal .summary-row,
+html[data-theme="dark"] #viewModal .summary-row.total,
+html[data-theme="dark"] #viewModal .summary-row span:last-child {
+    color: var(--text-heading) !important;
+}
+
+html[data-theme="dark"] #viewModal .close-button:hover {
+    background-color: var(--surface-subtle) !important;
+    color: var(--text-heading) !important;
+}
+
+html[data-theme="dark"] #viewModal .detail-group {
+    background: var(--surface-subtle) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+html[data-theme="dark"] #viewModal .detail-group label,
+html[data-theme="dark"] #viewModal .summary-row span:first-child {
+    color: var(--text-muted) !important;
+}
+
+html[data-theme="dark"] #viewModal .items-table {
+    background: var(--surface-color) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+html[data-theme="dark"] #viewModal .items-table th {
+    background: var(--surface-subtle) !important;
+    color: var(--text-muted) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+html[data-theme="dark"] #viewModal .items-table td {
+    border-bottom: 1px solid var(--border-soft) !important;
+}
+
+html[data-theme="dark"] #viewModal .summary-section {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01)), var(--surface-subtle) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: none !important;
+}
+
+html[data-theme="dark"] #viewModal .summary-row.total {
+    border-top: 1px solid var(--border-color) !important;
+}

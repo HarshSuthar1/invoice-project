@@ -1,0 +1,79 @@
+/* ============================================================================
+   UTILITY CLASSES - Reusable helpers across pages
+   ============================================================================ */
+
+/* Loading state */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Text utilities */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-left { text-align: left; }
+
+.text-muted { color: #6b7280; }
+.text-dark { color: #111827; }
+.text-light { color: #f3f4f6; }
+
+.text-small { font-size: 12px; }
+.text-normal { font-size: 14px; }
+.text-large { font-size: 16px; }
+
+.font-bold { font-weight: 700; }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+
+/* Spacing utilities */
+.mt-0 { margin-top: 0; }
+.mt-4 { margin-top: 16px; }
+.mt-8 { margin-top: 32px; }
+
+.mb-0 { margin-bottom: 0; }
+.mb-4 { margin-bottom: 16px; }
+.mb-8 { margin-bottom: 32px; }
+
+.p-0 { padding: 0; }
+.p-4 { padding: 16px; }
+.p-8 { padding: 32px; }
+
+/* Display utilities */
+.hidden { display: none; }
+.block { display: block; }
+.flex { display: flex; }
+.grid { display: grid; }
+
+/* Flexbox utilities */
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+
+/* Border utilities */
+.border { border: 1px solid #e5e7eb; }
+.border-bottom { border-bottom: 1px solid #e5e7eb; }
+.border-top { border-top: 1px solid #e5e7eb; }
+
+.rounded { border-radius: 6px; }
+.rounded-lg { border-radius: 8px; }
+
+/* Shadow utilities */
+.shadow-sm { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+.shadow { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+
+/* Error and success states */
+.error-state { color: #dc2626; }
+.success-state { color: #059669; }
+.warning-state { color: #d97706; }
+
+.error-bg { background-color: #fef2f2; border: 1px solid #fca5a5; }
+.success-bg { background-color: #f0fdf4; border: 1px solid #bbf7d0; }
+.warning-bg { background-color: #fffbeb; border: 1px solid #fcd34d; }
+
+/* Responsive visibility */
+@media (max-width: 768px) {
+    .hide-mobile { display: none; }
+}
+
+@media (min-width: 769px) {
+    .show-mobile { display: none; }
+}

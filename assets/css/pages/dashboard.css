@@ -1,0 +1,175 @@
+/* =========================
+   DASHBOARD LAYOUT
+   ========================= */
+
+.main-content {
+    padding: 32px;
+    background: var(--surface-subtle);
+    color: var(--text-primary);
+    min-height: 100vh;
+}
+
+/* =========================
+   TOP STATS CARDS
+   ========================= */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: var(--card-shadow);
+}
+
+.stat-header {
+    margin-bottom: 12px;
+}
+
+.stat-title {
+    font-size: 14px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-heading);
+    margin-bottom: 6px;
+}
+
+.stat-trend span {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+/* =========================
+   INVOICE + CHART SECTIONS
+   ========================= */
+
+.invoice-sections {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+}
+
+/* =========================
+   SECTION CARDS
+   ========================= */
+
+.section-card {
+    background: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-header {
+    padding: 16px 20px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.section-header h3 {
+    margin: 0;
+    color: var(--sidebar-active-text);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.section-content {
+    padding: 20px;
+    flex: 1;
+    color: var(--text-primary);
+}
+
+/* =========================
+   RECENT INVOICES TABLE
+   ========================= */
+
+.invoice-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface-color);
+}
+
+.invoice-table thead th {
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.invoice-table tbody td {
+    padding: 14px 0;
+    font-size: 14px;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-soft);
+}
+
+.invoice-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =========================
+   STATUS BADGES
+   ========================= */
+
+.badge {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 999px;
+}
+
+.badge.paid {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge.unpaid {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge.partial {
+    background: #fceeb8;
+    color: #d87030;
+}
+
+/* =========================
+   PAYMENT STATUS CHART
+   ========================= */
+
+.section-content canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+/* =========================
+   RESPONSIVE
+   ========================= */
+
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-sections {
+        grid-template-columns: 1fr;
+    }
+}

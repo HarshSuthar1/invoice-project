@@ -1,0 +1,332 @@
+/* ============================================================================
+   BASE STYLING - Global reset, layout, and theme defaults
+   ============================================================================ */
+:root {
+    color-scheme: light;
+    --app-bg: #f3f4f6;
+    --main-content-bg: #f3f4f6;
+    --surface-color: #ffffff;
+    --surface-subtle: #f9fafb;
+    --surface-muted: #eff6ff;
+    --text-primary: #374151;
+    --text-heading: #1f2937;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --border-soft: #f3f4f6;
+    --sidebar-bg: #1f2937;
+    --sidebar-text: #ffffff;
+    --sidebar-link: #d1d5db;
+    --sidebar-hover: #374151;
+    --sidebar-active: #3b82f6;
+    --sidebar-active-text: #ffffff;
+    --sidebar-user-bg: #374151;
+    --user-avatar-bg: #6b7280;
+    --toggle-bg: rgba(255, 255, 255, 0.08);
+    --toggle-hover-bg: rgba(255, 255, 255, 0.16);
+    --toggle-border: rgba(255, 255, 255, 0.14);
+    --toggle-text: #d1d5db;
+    --danger-bg: #dc2626;
+    --danger-hover: #b91c1c;
+    --focus-ring: rgba(59, 130, 246, 0.35);
+    --shadow-sidebar: 1px 0 3px rgba(15, 23, 42, 0.10);
+    --shadow-mobile-sidebar: 0 1px 3px rgba(15, 23, 42, 0.10);
+    --card-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --table-row-hover: rgba(59, 130, 246, 0.08);
+}
+
+html[data-theme="dark"] {
+    color-scheme: dark;
+    --app-bg: #111827; 
+    --main-content-bg: #111827;
+    --surface-color: #1f2937;
+    --surface-subtle: #0f172a;
+    --surface-muted: #111827;   
+    --text-primary: #d1d5db;
+    --text-heading: #f9fafb;
+    --text-muted: #9ca3af;
+    --border-color: #374151;
+    --border-soft: #374151;
+    --sidebar-bg: #0f172a;
+    --sidebar-text: #f9fafb;
+    --sidebar-link: #d1d5db;
+    --sidebar-hover: #374151;
+    --sidebar-active: #3b82f6;
+    --sidebar-active-text: #ffffff;
+    --sidebar-user-bg: #111827;
+    --user-avatar-bg: #6b7280;
+    --toggle-bg: rgba(255, 255, 255, 0.08);
+    --toggle-hover-bg: rgba(255, 255, 255, 0.14);
+    --toggle-border: rgba(209, 213, 219, 0.18);
+    --toggle-text: #f9fafb;
+    --danger-bg: #dc2626;
+    --danger-hover: #b91c1c;
+    --focus-ring: rgba(96, 165, 250, 0.35);
+    --shadow-sidebar: 1px 0 3px rgba(0, 0, 0, 0.30);
+    --shadow-mobile-sidebar: 0 1px 3px rgba(0, 0, 0, 0.30);
+    --card-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+    --table-row-hover: rgba(59, 130, 246, 0.14);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    background-color: var(--app-bg);
+    width: 100%;
+}
+
+body {
+    font-family: 'Karla', sans-serif;
+    background-color: var(--app-bg);
+    color: var(--text-primary);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background-color 200ms ease, color 200ms ease;
+    
+}
+
+/* ============================================================================
+   SIDEBAR
+   ============================================================================ */
+
+.sidebar {
+    background-color: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    width: 250px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 250px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    box-shadow: var(--shadow-sidebar);
+    transition: background-color 200ms ease, color 200ms ease;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 40px;
+    margin-bottom: 30px;
+}
+
+.sidebar-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--sidebar-text);
+}
+
+.sidebar-nav {
+    flex: 1;
+}
+
+.sidebar-nav ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-nav li {
+    margin-bottom: 8px;
+}
+
+.sidebar-nav a {
+    color: var(--sidebar-link);
+    text-decoration: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    display: block;
+    transition: background-color 200ms ease, color 200ms ease;
+}
+
+.sidebar-nav a:hover {
+    background-color: var(--sidebar-hover);
+    color: var(--sidebar-text);
+}
+
+.sidebar-nav a.active {
+    background-color: var(--sidebar-active);
+    color: var(--sidebar-active-text);
+    font-weight: 600;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: var(--sidebar-user-bg);
+    border-radius: 6px;
+    transition: background-color 200ms ease;
+}
+
+.user-info img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--user-avatar-bg);
+    object-fit: cover;
+}
+
+.user-info div {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-info .user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sidebar-text);
+    margin: 0;
+}
+
+.user-info .user-email {
+    font-size: 12px;
+    color: var(--sidebar-link);
+    margin: 0;
+}
+
+.sidebar-actions {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 16px;
+    width: 100%;
+}
+
+.dark-mode-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    margin-bottom: 0;
+    background-color: var(--toggle-bg);
+    color: var(--toggle-text);
+    border: 1px solid var(--toggle-border);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
+}
+
+.dark-mode-btn:hover {
+    background-color: var(--toggle-hover-bg);
+}
+
+.dark-mode-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.dark-mode-btn .theme-icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.logout-button,
+.delete-button {
+    background-color: var(--danger-bg);
+    color: var(--sidebar-active-text);
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background-color 200ms ease;
+}
+
+.logout-button:hover,
+.delete-button:hover {
+    background-color: var(--danger-hover);
+}
+
+/* ============================================================================
+   MAIN CONTENT AREA
+   ============================================================================ */
+
+.main-content {
+    flex: 1;
+    padding: 32px 40px;
+    min-width: 0;
+    overflow-y: auto;
+    background-color: var(--main-content-bg);
+    color: var(--text-primary);
+    transition: background-color 200ms ease, color 200ms ease;
+    min-height: 100vh;
+}
+
+.main-content > * {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ============================================================================
+   RESPONSIVE LAYOUT
+   ============================================================================ */
+
+@media (max-width: 1024px) {
+    .main-content {
+        padding: 24px 32px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-content {
+        padding: 16px 20px;
+    }
+}
+
+@media (max-width: 900px) {
+    body {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        flex: 0 0 auto;
+        box-shadow: var(--shadow-mobile-sidebar);
+    }
+
+    .sidebar-nav ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .sidebar-nav li {
+        margin-bottom: 0;
+    }
+
+    .sidebar-nav a {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .user-info {
+        margin-bottom: 12px;
+    }
+
+    .sidebar-actions {
+        margin-top: 12px;
+    }
+}
