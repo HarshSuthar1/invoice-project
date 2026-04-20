@@ -52,6 +52,10 @@ switch ($page) {
         require __DIR__ . '/../views/reports.php';
         break;
 
+    case 'ledger':
+        require __DIR__ . '/../views/ledger.php';
+        break;
+
     case 'profile':
         require __DIR__ . '/../views/profile.php';
         break;

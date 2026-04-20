@@ -48,6 +48,7 @@ function addRow(client) {
     <td>${client.email || ''}<br><small>${client.phone || ''}</small></td>
     <td>${client.gst_number || ''}</td>
     <td>
+      <button class="btn btn-view" data-action="ledger" data-id="${client.id}">Ledger</button>
       <button class="btn btn-view" data-action="view" data-id="${client.id}">View</button>
       <button class="btn btn-edit" data-action="edit" data-id="${client.id}">Edit</button>
       <button class="btn btn-delete" data-action="delete" data-id="${client.id}">Delete</button>
@@ -82,6 +83,10 @@ document.addEventListener('click', (e) => {
   if (action === 'view') {
     populateView(id);
     openModal('viewClientModal');
+  }
+
+  if (action === 'ledger') {
+    window.location.href = `/Business%20project/public/index.php?page=ledger&client_id=${encodeURIComponent(id)}`;
   }
 
   if (action === 'delete') handleDelete(id);

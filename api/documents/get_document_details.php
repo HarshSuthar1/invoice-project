@@ -7,6 +7,32 @@ require_once '../../app/bootstrap.php';
 
 ApiAuth::requireLogin();
 
+function document_parse_item_metadata(array $item): array
+{
+    $item['description_extra'] = '';
+    $item['sub_items'] = [];
+
+    $raw = trim((string) ($item['specifications'] ?? ''));
+    if ($raw !== '') {
+        $decoded = json_decode($raw, true);
+
+        if (is_array($decoded)) {
+            $item['description_extra'] = trim((string) ($decoded['description_extra'] ?? ''));
+            $item['sub_items'] = is_array($decoded['sub_items'] ?? null) ? $decoded['sub_items'] : [];
+        } else {
+            $item['description_extra'] = $raw;
+        }
+    }
+
+    if ($item['description_extra'] === '' && str_contains((string) ($item['description'] ?? ''), "\n")) {
+        $parts = preg_split("/\r\n|\n|\r/", (string) $item['description']);
+        $item['description'] = array_shift($parts) ?? '';
+        $item['description_extra'] = trim(implode(PHP_EOL, $parts));
+    }
+
+    return $item;
+}
+
 try {
     if (empty($_GET['id'])) {
         ApiResponse::error('Document ID is required', 422);
@@ -42,7 +68,7 @@ try {
     $items = [];
     $result = $stmt->get_result();
     while ($row = $result->fetch_assoc()) {
-        $items[] = $row;
+        $items[] = document_parse_item_metadata($row);
     }
 
     ApiResponse::success([

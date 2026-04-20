@@ -392,6 +392,233 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
             color: #059669;
             font-weight: 700;
         }
+
+        .grouped-document-table {
+            width: 100%;
+            table-layout: fixed;
+        }
+
+        .grouped-document-table th,
+        .grouped-document-table td {
+            vertical-align: top;
+            white-space: normal;
+        }
+
+        .grouped-document-table td {
+            padding-top: 14px;
+            padding-bottom: 14px;
+        }
+
+        .item-description-cell {
+            min-width: 320px;
+            width: auto;
+        }
+
+        .item-description-stack {
+            display: grid;
+            gap: 8px;
+            max-width: 100%;
+        }
+
+        .item-description-stack textarea,
+        .sub-line-row textarea,
+        .sub-line-row input {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 13px;
+            font-family: inherit;
+            color: var(--text-primary);
+            background: var(--surface-color);
+            box-sizing: border-box;
+        }
+
+        .item-description-stack textarea:focus,
+        .sub-line-row textarea:focus,
+        .sub-line-row input:focus {
+            outline: none;
+            border-color: var(--sidebar-active);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+        }
+
+        .desc-main {
+            min-height: 88px;
+            resize: vertical;
+        }
+
+        .desc-extra {
+            min-height: 56px;
+            resize: vertical;
+            background: var(--surface-subtle);
+        }
+
+        .item-tools {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .add-sub-line-btn {
+            border: 1px dashed var(--border-color);
+            background: var(--surface-subtle);
+            color: var(--sidebar-active);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .add-sub-line-btn:hover {
+            background: var(--surface-muted);
+            border-color: var(--sidebar-active);
+        }
+
+        .sub-lines-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .sub-line-row {
+            display: grid;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            background: var(--surface-subtle);
+        }
+
+        .sub-line-grid {
+            display: grid;
+            grid-template-columns: minmax(68px, 0.8fr) minmax(76px, 0.9fr) minmax(92px, 1fr) auto auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .sub-line-total {
+            min-width: 84px;
+            text-align: right;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-heading);
+            align-self: center;
+        }
+
+        .remove-sub-line-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 999px;
+            background: rgba(239, 68, 68, 0.12);
+            color: #ef4444;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .remove-sub-line-btn:hover {
+            background: rgba(239, 68, 68, 0.18);
+        }
+
+        .row-helper-text {
+            margin: 8px 0 0;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .grouped-document-table td .hsn,
+        .grouped-document-table td .qty,
+        .grouped-document-table td .unit,
+        .grouped-document-table td .price,
+        .grouped-document-table td .tax,
+        .grouped-document-table td .row-date {
+            width: 100%;
+            min-width: 0;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--surface-color);
+            color: var(--text-primary);
+            font-size: 13px;
+            box-sizing: border-box;
+        }
+
+        .grouped-document-table td .hsn:focus,
+        .grouped-document-table td .qty:focus,
+        .grouped-document-table td .unit:focus,
+        .grouped-document-table td .price:focus,
+        .grouped-document-table td .tax:focus,
+        .grouped-document-table td .row-date:focus {
+            outline: none;
+            border-color: var(--sidebar-active);
+            box-shadow: 0 0 0 3px var(--focus-ring);
+            background: var(--surface-color);
+        }
+
+        .amount-cell {
+            text-align: right;
+        }
+
+        .grouped-document-table td .lineTotal {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            padding-top: 10px;
+            font-weight: 700;
+            color: var(--text-heading);
+            text-align: right;
+        }
+
+        .grouped-document-table .image-column,
+        .grouped-document-table .action-column {
+            text-align: center;
+        }
+
+        .grouped-document-table .action-column .btn-delete {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 38px;
+            height: 32px;
+            border-radius: 8px;
+            margin-top: 2px;
+        }
+
+        .grouped-document-table .image-column .item-image-paste {
+            margin: 0 auto;
+        }
+
+        .sub-lines-list:empty {
+            display: none;
+        }
+
+        .sub-line-row {
+            max-width: 100%;
+        }
+
+        .sub-line-row textarea,
+        .sub-line-row input {
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 900px) {
+            .sub-line-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .sub-line-total,
+            .remove-sub-line-btn {
+                justify-self: start;
+            }
+
+            .item-description-cell {
+                width: auto;
+                min-width: 300px;
+            }
+
+            .grouped-document-table {
+                table-layout: auto;
+            }
+        }
     </style>
 </head>
 
@@ -469,7 +696,32 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
 
                 <!-- Items Table -->
                 <div class="table-container">
-                    <table class="invoice-table">
+                    <table class="invoice-table grouped-document-table">
+                        <colgroup>
+                            <?php if ($isChallan): ?>
+                                <col style="width: 14%;">
+                                <col style="width: 46%;">
+                                <col style="width: 12%;">
+                                <col style="width: 18%;">
+                                <col style="width: 10%;">
+                            <?php else: ?>
+                                <col style="width: <?php echo $showTax ? '41%' : ($showImageColumn ? '46%' : '50%'); ?>;">
+                                <?php if ($showTax): ?>
+                                <col style="width: 11%;">
+                                <?php endif; ?>
+                                <col style="width: 8%;">
+                                <col style="width: 8%;">
+                                <col style="width: 10%;">
+                                <?php if ($showTax): ?>
+                                <col style="width: 7%;">
+                                <?php endif; ?>
+                                <col style="width: <?php echo $showImageColumn ? '10%' : '9%'; ?>;">
+                                <?php if ($showImageColumn): ?>
+                                <col style="width: 12%;">
+                                <?php endif; ?>
+                                <col style="width: 6%;">
+                            <?php endif; ?>
+                        </colgroup>
                         <thead>
                             <tr>
                                 <?php if ($isChallan): ?>
@@ -477,21 +729,21 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
                                     <th style="width: 45%;">Description (Starting → Ending Destination)</th>
                                     <th style="width: 12%;">Rounds</th>
                                     <th style="width: 18%;">Amount</th>
-                                    <th style="width: 13%;">Action</th>
+                                    <th class="action-column" style="width: 13%;">Action</th>
                                 <?php else: ?>
                                     <th>Description</th>
                                     <?php if ($showTax): ?>
-                                    <th style="width: 10%;">HSN Code</th>
+                                    <th class="hsn-column" style="width: 10%;">HSN Code</th>
                                     <?php endif; ?>
-                                    <th>Quantity</th>
-                                    <th>Unit</th>
-                                    <th>Unit Price</th>
+                                    <th class="qty-column">Quantity</th>
+                                    <th class="unit-column">Unit</th>
+                                    <th class="price-column">Unit Price</th>
                                     <th class="tax-column">Tax (%)</th>
-                                    <th>Amount</th>
+                                    <th class="amount-column">Amount</th>
                                     <?php if ($showImageColumn): ?>
                                     <th class="image-column" style="width: 130px;">Image</th>
                                     <?php endif; ?>
-                                    <th>Action</th>
+                                    <th class="action-column">Action</th>
                                 <?php endif; ?>
                             </tr>
                         </thead>
@@ -821,6 +1073,80 @@ function installDiscountControlOverrides() {
     syncDiscountMode(discountType);
 }
 
+function escapeField(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function createSubLineElement(data = {}) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'sub-line-row';
+    wrapper.innerHTML = `
+        <textarea class="sub-line-desc" rows="2" placeholder="Extra billed line, e.g. Gray Powder Coating">${escapeField(data.description || '')}</textarea>
+        <div class="sub-line-grid">
+            <input type="number" class="sub-line-qty" value="${escapeField(data.quantity || 1)}" min="0" step="0.01" placeholder="Qty">
+            <input type="text" class="sub-line-unit" value="${escapeField(data.unit || 'Nos')}" placeholder="Unit">
+            <input type="number" class="sub-line-price" value="${escapeField(data.price || 0)}" min="0" step="0.01" placeholder="Price">
+            <span class="sub-line-total">${formatCurrency(0)}</span>
+            <button type="button" class="remove-sub-line-btn" data-action="remove-sub-line" title="Remove extra line">×</button>
+        </div>
+    `;
+
+    return wrapper;
+}
+
+function addSubLineToRow(row, data = {}) {
+    const container = row.querySelector('.sub-lines-list');
+    if (!container) return;
+
+    container.appendChild(createSubLineElement(data));
+    calculateTotals();
+}
+
+function collectSubItems(row) {
+    const items = [];
+    let invalid = false;
+
+    qsa('.sub-line-row', row).forEach((subRow) => {
+        const description = subRow.querySelector('.sub-line-desc')?.value.trim() || '';
+        const quantity = Number(subRow.querySelector('.sub-line-qty')?.value || 0);
+        const unit = subRow.querySelector('.sub-line-unit')?.value.trim() || 'Nos';
+        const price = Number(subRow.querySelector('.sub-line-price')?.value || 0);
+
+        const isTouched = description !== '' || quantity > 0 || price > 0 || unit !== 'Nos';
+        if (!isTouched) return;
+
+        if (description === '') {
+            invalid = true;
+            return;
+        }
+
+        items.push({
+            description,
+            quantity: quantity > 0 ? quantity : 1,
+            unit,
+            price: price >= 0 ? price : 0
+        });
+    });
+
+    return { items, invalid };
+}
+
+function hydrateGroupedRow(row, data = {}) {
+    const mainDesc = row.querySelector('.desc-main');
+    const extraDesc = row.querySelector('.desc-extra');
+
+    if (mainDesc) mainDesc.value = data?.description || '';
+    if (extraDesc) extraDesc.value = data?.description_extra || '';
+
+    const subItems = Array.isArray(data?.sub_items) ? data.sub_items : [];
+    subItems.forEach((subItem) => addSubLineToRow(row, subItem));
+}
+
 /* ============================================================
    CALCULATE TOTALS  (discount-aware)
    ============================================================ */
@@ -835,15 +1161,27 @@ function calculateTotals() {
         if (isChallan) {
             subtotalAmt += qty * price;
         } else {
-            const taxRate    = showTax ? (Number(row.querySelector('.tax')?.value) || 0) : 0;
-            const lineAmount = qty * price;
-            const taxAmount  = (lineAmount * taxRate) / 100;
+            const subItems = collectSubItems(row).items;
+            let groupedAmount = qty * price;
+            subItems.forEach((subItem) => {
+                groupedAmount += (Number(subItem.quantity) || 0) * (Number(subItem.price) || 0);
+            });
 
-            subtotalAmt += lineAmount;
+            const taxRate    = showTax ? (Number(row.querySelector('.tax')?.value) || 0) : 0;
+            const taxAmount  = (groupedAmount * taxRate) / 100;
+
+            subtotalAmt += groupedAmount;
             taxTotal    += taxAmount;
 
             const lineTotal = row.querySelector('.lineTotal');
-            if (lineTotal) lineTotal.textContent = formatCurrency(lineAmount + taxAmount);
+            if (lineTotal) lineTotal.textContent = formatCurrency(groupedAmount + taxAmount);
+
+            qsa('.sub-line-row', row).forEach((subRow) => {
+                const subQty = Number(subRow.querySelector('.sub-line-qty')?.value || 0);
+                const subPrice = Number(subRow.querySelector('.sub-line-price')?.value || 0);
+                const totalEl = subRow.querySelector('.sub-line-total');
+                if (totalEl) totalEl.textContent = formatCurrency(subQty * subPrice);
+            });
         }
     });
 
@@ -997,15 +1335,15 @@ function addItemRow(data = null) {
 
     if (isChallan) {
         row.innerHTML = `
-            <td><input type="date" class="row-date" value="${data?.date || ''}" required></td>
+            <td class="date-column"><input type="date" class="row-date" value="${data?.date || ''}" required></td>
             <td><textarea class="desc" rows="2" placeholder="e.g., Ahmedabad → Mumbai" required>${data?.description || ''}</textarea></td>
-            <td><input type="number" class="qty" value="${data?.quantity || 1}" min="0" step="1"></td>
-            <td><input type="number" class="price" value="${data?.price || 0}" min="0" step="0.01"></td>
-            <td><button type="button" class="btn-delete btn" data-action="remove-item">×</button></td>
+            <td class="qty-column"><input type="number" class="qty" value="${data?.quantity || 1}" min="0" step="1"></td>
+            <td class="price-column"><input type="number" class="price" value="${data?.price || 0}" min="0" step="0.01"></td>
+            <td class="action-column"><button type="button" class="btn-delete btn" data-action="remove-item">×</button></td>
         `;
     } else {
         const hsnCell = canUseTax
-            ? `<td><input type="text" class="hsn" value="${data?.hsn || ''}" placeholder="e.g., 7308"></td>`
+            ? `<td class="hsn-column"><input type="text" class="hsn" value="${data?.hsn || ''}" placeholder="e.g., 7308"></td>`
             : '';
         const imageCell = showImageColumn ? `
             <td class="image-column">
@@ -1027,19 +1365,30 @@ function addItemRow(data = null) {
         ` : '';
 
         row.innerHTML = `
-            <td><input type="text" class="desc" value="${data?.description || ''}" required></td>
+            <td class="item-description-cell">
+                <div class="item-description-stack">
+                    <textarea class="desc desc-main" rows="4" placeholder="Main item description" required></textarea>
+                    <textarea class="desc-extra" rows="2" placeholder="Optional extra detail text to show on the next line"></textarea>
+                    <div class="item-tools">
+                        <button type="button" class="add-sub-line-btn" data-action="add-sub-line">+ Add extra billed line</button>
+                    </div>
+                    <div class="sub-lines-list"></div>
+                    <p class="row-helper-text">Use extra detail text for notes/specs. Use extra billed lines when the next line needs its own qty and amount.</p>
+                </div>
+            </td>
             ${hsnCell}
-            <td><input type="number" class="qty" value="${data?.quantity || 1}" min="0" step="0.01"></td>
-            <td><input type="text" class="unit" value="${data?.unit || 'Nos'}"></td>
-            <td><input type="number" class="price" value="${data?.price || 0}" min="0" step="0.01"></td>
+            <td class="qty-column"><input type="number" class="qty" value="${data?.quantity || 1}" min="0" step="0.01"></td>
+            <td class="unit-column"><input type="text" class="unit" value="${data?.unit || 'Nos'}"></td>
+            <td class="price-column"><input type="number" class="price" value="${data?.price || 0}" min="0" step="0.01"></td>
             <td class="tax-column"><input type="number" class="tax" value="${data?.tax || 0}" min="0" max="100" step="0.01"></td>
-            <td class="lineTotal">₹0.00</td>
+            <td class="amount-cell"><span class="lineTotal">₹0.00</span></td>
             ${imageCell}
-            <td><button type="button" class="btn-delete btn" data-action="remove-item">×</button></td>
+            <td class="action-column"><button type="button" class="btn-delete btn" data-action="remove-item">×</button></td>
         `;
     }
 
     tbody.appendChild(row);
+    if (!isChallan) hydrateGroupedRow(row, data || {});
     if (showImageColumn) setupItemImagePaste(row);
     updateTaxVisibility();
     calculateTotals();
@@ -1090,11 +1439,13 @@ async function importDocument(docId) {
         items.forEach(item => {
             addItemRow({
                 description: item.description,
+                description_extra: item.description_extra || '',
                 hsn:         item.hsn_code,
                 quantity:    item.quantity,
                 unit:        item.unit || 'Nos',
                 price:       item.unit_price || item.price,
-                tax:         canUseTax ? (item.tax_rate || 0) : 0
+                tax:         canUseTax ? (item.tax_rate || 0) : 0,
+                sub_items:   item.sub_items || []
             });
         });
 
@@ -1127,7 +1478,9 @@ async function saveDocument() {
     let hasEmptyDescription = false;
 
     qsa('#documentItemsBody tr').forEach(row => {
-        const desc = row.querySelector('.desc').value.trim();
+        const desc = isChallan
+            ? row.querySelector('.desc')?.value.trim()
+            : row.querySelector('.desc-main')?.value.trim();
         if (!desc) { hasEmptyDescription = true; return; }
 
         if (isChallan) {
@@ -1140,6 +1493,14 @@ async function saveDocument() {
                 tax:         0
             });
         } else {
+            const extraDescription = row.querySelector('.desc-extra')?.value.trim() || '';
+            const subItemsState = collectSubItems(row);
+
+            if (subItemsState.invalid) {
+                hasEmptyDescription = true;
+                return;
+            }
+
             const itemData = {
                 description: desc,
                 hsn_code:    showTax ? (row.querySelector('.hsn')?.value || '') : '',
@@ -1148,6 +1509,9 @@ async function saveDocument() {
                 price:       row.querySelector('.price').value,
                 tax:         showTax ? (row.querySelector('.tax')?.value || 0) : 0
             };
+
+            if (extraDescription) itemData.description_extra = extraDescription;
+            if (subItemsState.items.length) itemData.sub_items = subItemsState.items;
 
             if (showImageColumn) {
                 const imageBox = row.querySelector('.image-paste-box');
@@ -1225,6 +1589,11 @@ document.addEventListener('click', (e) => {
 
     if (action === 'add-item')         addItemRow();
     if (action === 'save-document')    saveDocument();
+    if (action === 'add-sub-line')     addSubLineToRow(actionEl.closest('tr'));
+    if (action === 'remove-sub-line') {
+        actionEl.closest('.sub-line-row')?.remove();
+        calculateTotals();
+    }
 
     if (action === 'remove-item') {
         const row = actionEl.closest('tr');

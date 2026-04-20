@@ -103,6 +103,13 @@ $current = $_GET['page'] ?? 'dashboard';
             </li>
 
             <li>
+                <a href="/Business%20project/public/index.php?page=ledger"
+                    class="<?= $current === 'ledger' ? 'active' : '' ?>">
+                    Ledger
+                </a>
+            </li>
+
+            <li>
                 <a href="/Business%20project/public/index.php?page=profile"
                     class="<?= $current === 'profile' ? 'active' : '' ?>">
                     Profile
