@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/Business%20project/assets/css/app.css?v=20260328c">
+    <link rel="stylesheet" href="/Business%20project/assets/css/app.css?v=20260417c">
     <title>Manage Documents</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
@@ -576,6 +576,10 @@
                 <div class="summary-row">
                     <span>Tax:</span>
                     <span id="viewTax"></span>
+                </div>
+                <div class="summary-row" id="viewDiscountRow" style="display: none;">
+                    <span>Discount:</span>
+                    <span id="viewDiscount"></span>
                 </div>
                 <div class="summary-row total">
                     <span>Total:</span>

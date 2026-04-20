@@ -14,6 +14,7 @@ try {
 
     $client_id        = (int) $_POST['client_id'];
     $document_type    = $_POST['document_type']; // quotation, bill-no-gst, invoice, challan
+    $issuer_type      = $_POST['issuer_type'] ?? 'company';
     $document_number  = $_POST['document_number'];
     $document_date    = $_POST['document_date'];
     $status           = $_POST['status'] ?? 'unpaid';
@@ -59,13 +60,14 @@ try {
                 grand_total,
                 amount_received,
                 status,
+                issuer_type,
                 document_image,
                 created_at
-            ) VALUES (?, ?, ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, NOW())
+            ) VALUES (?, ?, ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
 
         $stmt->bind_param(
-            "sissdddss",
+            "sissddddsss",
             $document_number,
             $client_id,
             $document_date,
@@ -75,6 +77,7 @@ try {
             $grand_total,
             $amount_received,
             $status,
+            $issuer_type,
             $document_image
         );
     } else if ($document_type === 'challan') {
@@ -91,13 +94,14 @@ try {
                 grand_total,
                 amount_received,
                 status,
+                issuer_type,
                 document_image,
                 created_at
-            ) VALUES (?, ?, ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, NOW())
+            ) VALUES (?, ?, ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
 
         $stmt->bind_param(
-            "sissdddss",
+            "sissddddsss",
             $document_number,
             $client_id,
             $document_date,
@@ -107,6 +111,7 @@ try {
             $grand_total,
             $amount_received,
             $status,
+            $issuer_type,
             $document_image
         );
     } else {
@@ -122,13 +127,14 @@ try {
                 grand_total,
                 amount_received,
                 status,
+                issuer_type,
                 document_image,
                 created_at
-            ) VALUES (?, ?, ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, NOW())
+            ) VALUES (?, ?, ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, ?, NOW())
         ");
 
         $stmt->bind_param(
-            "sissdddss",
+            "sissddddsss",
             $document_number,
             $client_id,
             $document_date,
@@ -138,6 +144,7 @@ try {
             $grand_total,
             $amount_received,
             $status,
+            $issuer_type,
             $document_image
         );
     }

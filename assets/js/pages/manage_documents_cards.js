@@ -212,10 +212,11 @@ const viewDocument = async (id) => {
   try {
     const { invoice: doc, items } = await fetchInvoice(id);
     currentViewingDocId = id;
+    const listDoc = documentsData.find(entry => String(entry.id) === String(id));
 
     // Populate modal
     qs('#viewDocumentNumber').textContent = doc.invoice_number;
-    qs('#viewClientName').textContent = doc.client_name || 'N/A';
+    qs('#viewClientName').textContent = doc.client_name || listDoc?.client_name || 'N/A';
     qs('#viewDocumentDate').textContent = formatDate(doc.invoice_date || doc.created_at);
     qs('#viewStatus').textContent = doc.status;
 
@@ -227,21 +228,39 @@ const viewDocument = async (id) => {
     let tax = 0;
 
     (items || []).forEach(item => {
-      subtotal += (item.quantity || 0) * (item.price || 0);
-      tax += item.tax || 0;
+      const unitPrice = Number(item.unit_price ?? item.price ?? 0);
+      const quantity = Number(item.quantity || 0);
+      const lineTotal = Number(item.line_total ?? item.total ?? quantity * unitPrice);
+      const taxAmount = Number(item.tax_amount ?? item.tax ?? lineTotal - (quantity * unitPrice));
+
+      subtotal += quantity * unitPrice;
+      tax += taxAmount;
 
       tbody.insertAdjacentHTML('beforeend', `
         <tr>
           <td>${escapeHtml(item.description)}</td>
-          <td>${item.quantity}</td>
-          <td>${formatCurrency(item.price)}</td>
-          <td>${formatCurrency(item.total)}</td>
+          <td>${quantity}</td>
+          <td>${formatCurrency(unitPrice)}</td>
+          <td>${formatCurrency(lineTotal)}</td>
         </tr>
       `);
     });
 
+    const discount = Number(doc.discount || 0);
+    const discountRow = qs('#viewDiscountRow');
+    const discountValue = qs('#viewDiscount');
+
     qs('#viewSubtotal').textContent = formatCurrency(subtotal);
     qs('#viewTax').textContent = formatCurrency(tax);
+    if (discountRow && discountValue) {
+      if (discount > 0) {
+        discountRow.style.display = 'flex';
+        discountValue.textContent = `-${formatCurrency(discount)}`;
+      } else {
+        discountRow.style.display = 'none';
+        discountValue.textContent = '';
+      }
+    }
     qs('#viewTotal').textContent = formatCurrency(doc.grand_total);
 
     // Open modal
@@ -398,9 +417,10 @@ const closeModal = (id) => {
    Event handlers
 ------------------------------ */
 document.addEventListener('click', (e) => {
-  const action = e.target.dataset.action;
-  const id = e.target.dataset.id;
-  const target = e.target.dataset.target;
+  const actionEl = e.target.closest('[data-action]');
+  const action = actionEl?.dataset.action;
+  const id = actionEl?.dataset.id;
+  const target = actionEl?.dataset.target;
 
   if (!action) return;
 

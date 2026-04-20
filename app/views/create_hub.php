@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/Business%20project/assets/css/app.css?v=20260328c">
+    <link rel="stylesheet" href="/Business%20project/assets/css/app.css?v=20260417b">
     <title>Create Documents - Hub</title>
     <style>
         /* Document Type Grid Styles */

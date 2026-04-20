@@ -16,9 +16,10 @@ try {
 
     // Invoice details
     $stmt = $conn->prepare("
-        SELECT *
-        FROM invoices
-        WHERE id = ?
+        SELECT i.*, c.company_name AS client_name
+        FROM invoices i
+        LEFT JOIN clients c ON c.id = i.client_id
+        WHERE i.id = ?
     ");
     $stmt->bind_param("i", $invoice_id);
     $stmt->execute();
