@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <?php
 declare(strict_types=1);
 
@@ -5,6 +6,15 @@ header('Content-Type: application/json');
 
 require_once '../../app/bootstrap.php';
 
+=======
+<?php
+declare(strict_types=1);
+
+header('Content-Type: application/json');
+
+require_once '../../app/bootstrap.php';
+
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
 ApiAuth::requireLogin();
 
 function document_bind_dynamic_params(mysqli_stmt $stmt, array $values): void
@@ -175,14 +185,22 @@ function document_prepare_item_insert(mysqli $conn): array
 }
 
 try {
+<<<<<<< HEAD
     if (empty($_POST['client_id']) || empty($_POST['items']) || empty($_POST['document_type'])) {
         ApiResponse::error('Invalid document data', 422);
     }
 
+=======
+    if (empty($_POST['client_id']) || empty($_POST['items']) || empty($_POST['document_type'])) {
+        ApiResponse::error('Invalid document data', 422);
+    }
+
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
     $client_id        = (int) $_POST['client_id'];
     $document_type    = $_POST['document_type']; // quotation, bill-no-gst, invoice, challan
     $issuer_type      = $_POST['issuer_type'] ?? 'company';
     $document_number  = $_POST['document_number'];
+<<<<<<< HEAD
     $document_date    = $_POST['document_date'];
     $status           = $_POST['status'] ?? 'unpaid';
     $grand_total      = (float) $_POST['grand_total'];
@@ -224,6 +242,49 @@ try {
                 due_date,
                 subtotal,
                 total_tax,
+=======
+    $document_date    = $_POST['document_date'];
+    $status           = $_POST['status'] ?? 'unpaid';
+    $grand_total      = (float) $_POST['grand_total'];
+    $subtotal         = (float) ($_POST['subtotal'] ?? 0);
+    $total_tax        = (float) ($_POST['total_tax'] ?? 0);
+    $amount_received  = (float) ($_POST['amount_received'] ?? 0);
+    $items            = json_decode($_POST['items'], true);
+    
+    // Handle pasted image (base64 encoded) - only for quotations and bills
+    $document_image   = null;
+    if (in_array($document_type, ['quotation', 'bill-no-gst']) && !empty($_POST['document_image'])) {
+        $document_image = $_POST['document_image']; // Already base64 encoded from frontend
+    }
+
+    // Challan-specific fields
+    $vehicle_number   = $_POST['vehicle_number'] ?? null;
+    $driver_name      = $_POST['driver_name'] ?? null;
+    $destination      = $_POST['destination'] ?? null;
+
+    $conn->begin_transaction();
+
+    // Determine table name based on document type
+    $table_name = match($document_type) {
+        'quotation' => 'quotations',
+        'bill-no-gst' => 'bills',
+        'invoice' => 'invoices',
+        'challan' => 'challans',
+        default => 'invoices'
+    };
+
+    // For invoices, use invoice_number and invoice_date columns
+    // For other documents, use document_number and document_date columns
+    if ($document_type === 'invoice') {
+        $stmt = $conn->prepare("
+            INSERT INTO {$table_name} (
+                invoice_number,
+                client_id,
+                invoice_date,
+                due_date,
+                subtotal,
+                total_tax,
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
                 grand_total,
                 amount_received,
                 status,
@@ -247,6 +308,7 @@ try {
             $issuer_type,
             $document_image
         );
+<<<<<<< HEAD
     } else if ($document_type === 'challan') {
         // Challans may not have the same table structure - use the existing invoices table for now
         // You'll need to create a separate challans table if needed
@@ -258,6 +320,19 @@ try {
                 due_date,
                 subtotal,
                 total_tax,
+=======
+    } else if ($document_type === 'challan') {
+        // Challans may not have the same table structure - use the existing invoices table for now
+        // You'll need to create a separate challans table if needed
+        $stmt = $conn->prepare("
+            INSERT INTO invoices (
+                invoice_number,
+                client_id,
+                invoice_date,
+                due_date,
+                subtotal,
+                total_tax,
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
                 grand_total,
                 amount_received,
                 status,
@@ -281,6 +356,7 @@ try {
             $issuer_type,
             $document_image
         );
+<<<<<<< HEAD
     } else {
         // For quotations and bills, use the invoices table with prefix
         $stmt = $conn->prepare("
@@ -291,6 +367,18 @@ try {
                 due_date,
                 subtotal,
                 total_tax,
+=======
+    } else {
+        // For quotations and bills, use the invoices table with prefix
+        $stmt = $conn->prepare("
+            INSERT INTO invoices (
+                invoice_number,
+                client_id,
+                invoice_date,
+                due_date,
+                subtotal,
+                total_tax,
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
                 grand_total,
                 amount_received,
                 status,
@@ -314,12 +402,21 @@ try {
             $issuer_type,
             $document_image
         );
+<<<<<<< HEAD
     }
 
     $stmt->execute();
     $document_id = $conn->insert_id;
 
     // Insert items - all use invoice_items table for now
+=======
+    }
+
+    $stmt->execute();
+    $document_id = $conn->insert_id;
+
+    // Insert items - all use invoice_items table for now
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
     $itemInsert = document_prepare_item_insert($conn);
     $stmt = $itemInsert['statement'];
     $itemColumns = $itemInsert['columns'];
@@ -352,6 +449,7 @@ try {
         document_bind_dynamic_params($stmt, $values);
         $stmt->execute();
     }
+<<<<<<< HEAD
 
     $conn->commit();
 
@@ -364,4 +462,18 @@ try {
         'Failed to save document: ' . $e->getMessage(),
         500
     );
+=======
+
+    $conn->commit();
+
+    ApiResponse::success([], 'Document created successfully');
+
+} catch (Throwable $e) {
+    $conn->rollback();
+
+    ApiResponse::error(
+        'Failed to save document: ' . $e->getMessage(),
+        500
+    );
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
 }

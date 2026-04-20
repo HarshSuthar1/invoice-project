@@ -54,6 +54,7 @@ function addRow(client) {
       <button class="btn btn-delete" data-action="delete" data-id="${client.id}">Delete</button>
     </td>
   `;
+<<<<<<< HEAD
   qs('#clientTableBody').appendChild(tr);
 }
 
@@ -80,6 +81,34 @@ document.addEventListener('click', (e) => {
     openModal('clientModal');
   }
 
+=======
+  qs('#clientTableBody').appendChild(tr);
+}
+
+/* ------------------------
+   Actions
+------------------------ */
+document.addEventListener('click', (e) => {
+  const { action, id, target } = e.target.dataset;
+  if (!action) return;
+
+  if (action === 'add-client') {
+    isEditMode = false;
+    currentEditId = null;
+    qs('#clientForm').reset();
+    qs('#modalTitle').textContent = 'Add New Client';
+    openModal('clientModal');
+  }
+
+  if (action === 'edit') {
+    fillForm(id);
+    isEditMode = true;
+    currentEditId = id;
+    qs('#modalTitle').textContent = 'Edit Client';
+    openModal('clientModal');
+  }
+
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
   if (action === 'view') {
     populateView(id);
     openModal('viewClientModal');
@@ -90,6 +119,7 @@ document.addEventListener('click', (e) => {
   }
 
   if (action === 'delete') handleDelete(id);
+<<<<<<< HEAD
 
   if (action === 'edit-client') {
     const viewId = qs('#viewClientModal')?.dataset.viewId;
@@ -212,4 +242,128 @@ async function handleDelete(id) {
     console.error(err);
     showError(err.message || 'Failed to delete client');
   }
+=======
+
+  if (action === 'edit-client') {
+    const viewId = qs('#viewClientModal')?.dataset.viewId;
+    if (viewId) {
+      fillForm(viewId);
+      isEditMode = true;
+      currentEditId = viewId;
+      closeModal('viewClientModal');
+      openModal('clientModal');
+    }
+  }
+
+  if (action === 'close-modal') {
+    if (target) {
+      closeModal(target);
+    }
+  }
+
+  if (action === 'submit-client') {
+    qs('#clientForm')?.requestSubmit ? qs('#clientForm').requestSubmit() : qs('#clientForm')?.dispatchEvent(new Event('submit', {cancelable: true}));
+  }
+});
+
+// Search / Filter clients
+qs('#searchInput')?.addEventListener('input', () => filterClients());
+
+const filterClients = () => {
+  const term = (qs('#searchInput')?.value || '').toLowerCase();
+  qsa('#clientTableBody tr').forEach(row => {
+    row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
+  });
+};
+
+/* ------------------------
+   Save client - FIXED
+------------------------ */
+qs('#clientForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const email = qs('#email').value.trim();
+  const gst = qs('#gstNumber').value.trim();
+
+  if (!required(qs('#companyName').value)) return showError('Company name required');
+  if (email && !isEmail(email)) return showError('Invalid email');
+  if (gst && !isGST(gst)) return showError('Invalid GST format');
+
+  // Create FormData with correct field names (snake_case for API)
+  const formData = new FormData();
+  formData.append('company_name', qs('#companyName').value.trim());
+  formData.append('contact_person', qs('#contactPerson').value.trim());
+  formData.append('email', email);
+  formData.append('phone', qs('#phone').value.trim());
+  formData.append('gst_number', gst);
+  formData.append('address', qs('#address').value.trim());
+  formData.append('notes', qs('#notes').value.trim());
+
+  if (isEditMode && currentEditId) {
+    formData.append('id', currentEditId);
+  }
+
+  const form = qs('#clientForm');
+  const saveButtons = document.querySelectorAll('[data-action="submit-client"]');
+  
+  try {
+    // UI: show loading
+    form?.classList.add('loading');
+    saveButtons.forEach(b => b.disabled = true);
+
+    await saveClient(formData);
+    closeModal('clientModal');
+    showSuccess(isEditMode ? 'Client updated successfully' : 'Client added successfully');
+    await loadClients();
+    
+    // Reset form and mode
+    form.reset();
+    isEditMode = false;
+    currentEditId = null;
+    
+  } catch (err) {
+    console.error(err);
+    showError(err.message || 'Failed to save client');
+  } finally {
+    form?.classList.remove('loading');
+    saveButtons.forEach(b => b.disabled = false);
+  }
+});
+
+function populateView(id) {
+  const c = clientsData[id];
+  if (!c) return;
+  qs('#viewCompanyName').textContent = c.company_name || '';
+  qs('#viewContactPerson').textContent = c.contact_person || '';
+  qs('#viewEmail').textContent = c.email || '';
+  qs('#viewPhone').textContent = c.phone || '';
+  qs('#viewGstNumber').textContent = c.gst_number || '';
+  qs('#viewAddress').textContent = c.address || '';
+  qs('#viewNotes').textContent = c.notes || '';
+  qs('#viewClientModal').dataset.viewId = id;
+}
+
+function fillForm(id) {
+  const c = clientsData[id];
+  if (!c) return;
+  qs('#companyName').value = c.company_name || '';
+  qs('#contactPerson').value = c.contact_person || '';
+  qs('#email').value = c.email || '';
+  qs('#phone').value = c.phone || '';
+  qs('#gstNumber').value = c.gst_number || '';
+  qs('#address').value = c.address || '';
+  qs('#notes').value = c.notes || '';
+}
+
+async function handleDelete(id) {
+  if (!confirm('Delete this client? This action cannot be undone.')) return;
+  try {
+    await deleteClient(id);
+    showSuccess('Client deleted successfully');
+    loadClients();
+  } catch (err) {
+    console.error(err);
+    showError(err.message || 'Failed to delete client');
+  }
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
 }

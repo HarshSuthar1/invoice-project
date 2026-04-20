@@ -219,11 +219,19 @@ const viewDocument = async (id) => {
     qs('#viewClientName').textContent = doc.client_name || listDoc?.client_name || 'N/A';
     qs('#viewDocumentDate').textContent = formatDate(doc.invoice_date || doc.created_at);
     qs('#viewStatus').textContent = doc.status;
+<<<<<<< HEAD
 
     // Populate items table
     const tbody = qs('#viewItemsTable');
     tbody.innerHTML = '';
 
+=======
+
+    // Populate items table
+    const tbody = qs('#viewItemsTable');
+    tbody.innerHTML = '';
+
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
     let subtotal = 0;
     let tax = 0;
 
@@ -262,6 +270,7 @@ const viewDocument = async (id) => {
       }
     }
     qs('#viewTotal').textContent = formatCurrency(doc.grand_total);
+<<<<<<< HEAD
 
     // Open modal
     openModal('viewModal');
@@ -416,6 +425,162 @@ const closeModal = (id) => {
 /* -----------------------------
    Event handlers
 ------------------------------ */
+=======
+
+    // Open modal
+    openModal('viewModal');
+
+  } catch (err) {
+    console.error('[manage_documents_cards.js] View error:', err);
+    showError(err.message || 'Failed to load document details');
+  }
+};
+
+/* -----------------------------
+   Edit document
+------------------------------ */
+const editDocument = (id) => {
+  const doc = documentsData.find(d => d.id == id);
+  if (!doc) return;
+
+  const docType = getDocumentType(doc.invoice_number);
+  
+  // Route to appropriate edit page
+  window.location.href = `/Business%20project/public/index.php?page=create-document&type=${docType}&edit=${id}`;
+};
+
+/* -----------------------------
+   Delete document
+------------------------------ */
+const deleteDocument = async (id) => {
+  const doc = documentsData.find(d => d.id == id);
+  if (!doc) return;
+
+  if (!confirm(`Are you sure you want to delete ${doc.invoice_number}?\n\nThis action cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    await updateInvoice({ delete: true, id });
+    showSuccess('Document deleted successfully');
+    
+    // Reload documents
+    await loadDocuments();
+    
+  } catch (err) {
+    console.error('[manage_documents_cards.js] Delete error:', err);
+    showError(err.message || 'Failed to delete document');
+  }
+};
+
+/* -----------------------------
+   Download PDF
+------------------------------ */
+const downloadDocumentPDF = async () => {
+  if (!currentViewingDocId) return;
+
+  try {
+    const { invoice: doc, items = [] } = await fetchInvoice(currentViewingDocId);
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; padding: 40px; color: #111827;">
+        <h1 style="margin-bottom: 8px;">${doc.invoice_number}</h1>
+        <p style="color: #6b7280; margin-bottom: 32px;">Client: ${escapeHtml(doc.client_name || 'N/A')}</p>
+        
+        <table width="100%" style="border-collapse: collapse; margin: 20px 0;">
+          <thead>
+            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+              <th style="text-align:left; padding: 12px;">Description</th>
+              <th style="text-align:right; padding: 12px;">Qty</th>
+              <th style="text-align:right; padding: 12px;">Price</th>
+              <th style="text-align:right; padding: 12px;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map(item => `
+              <tr style="border-bottom: 1px solid #f3f4f6;">
+                <td style="padding: 12px;">${escapeHtml(item.description)}</td>
+                <td style="text-align:right; padding: 12px;">${item.quantity}</td>
+                <td style="text-align:right; padding: 12px;">${formatCurrency(item.price)}</td>
+                <td style="text-align:right; padding: 12px;">${formatCurrency(item.total)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        
+        <div style="text-align: right; margin-top: 32px;">
+          <h2 style="font-size: 24px; color: #059669;">Total: ${formatCurrency(doc.grand_total)}</h2>
+        </div>
+      </div>
+    `;
+
+    const container = document.createElement('div');
+    container.innerHTML = html;
+
+    html2pdf()
+      .set({ 
+        margin: 10, 
+        filename: `${doc.invoice_number}.pdf`, 
+        html2canvas: { scale: 2 },
+        jsPDF: { format: 'a4' }
+      })
+      .from(container)
+      .save();
+
+  } catch (err) {
+    console.error('[manage_documents_cards.js] PDF error:', err);
+    showError('Failed to generate PDF');
+  }
+};
+
+/* -----------------------------
+   Filter documents
+------------------------------ */
+const filterDocuments = () => {
+  const searchTerm = (qs('#searchInput')?.value || '').toLowerCase();
+  const typeFilter = (qs('#typeFilter')?.value || '').toLowerCase();
+  const statusFilter = (qs('#statusFilter')?.value || '').toLowerCase();
+
+  const filtered = documentsData.filter(doc => {
+    const matchesSearch = 
+      doc.invoice_number.toLowerCase().includes(searchTerm) ||
+      (doc.client_name || '').toLowerCase().includes(searchTerm);
+    
+    const docType = getDocumentType(doc.invoice_number);
+    const matchesType = !typeFilter || docType === typeFilter;
+    
+    const matchesStatus = !statusFilter || 
+      (doc.status || '').toLowerCase() === statusFilter;
+
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  renderDocumentCards(filtered);
+};
+
+/* -----------------------------
+   Modal helpers
+------------------------------ */
+const openModal = (id) => {
+  const modal = qs(`#${id}`);
+  if (modal) {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+const closeModal = (id) => {
+  const modal = qs(`#${id}`);
+  if (modal) {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+};
+
+/* -----------------------------
+   Event handlers
+------------------------------ */
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
 document.addEventListener('click', (e) => {
   const actionEl = e.target.closest('[data-action]');
   const action = actionEl?.dataset.action;
@@ -423,6 +588,7 @@ document.addEventListener('click', (e) => {
   const target = actionEl?.dataset.target;
 
   if (!action) return;
+<<<<<<< HEAD
 
   switch (action) {
     case 'view-document':
@@ -483,4 +649,66 @@ document.addEventListener('click', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
   console.log('[manage_documents_cards.js] Initializing...');
   loadDocuments();
+=======
+
+  switch (action) {
+    case 'view-document':
+      viewDocument(id);
+      break;
+    
+    case 'edit-document':
+      editDocument(id);
+      break;
+    
+    case 'delete-document':
+      deleteDocument(id);
+      break;
+    
+    case 'download-invoice':
+      downloadDocumentPDF();
+      break;
+    
+    case 'edit-from-view':
+      closeModal('viewModal');
+      if (currentViewingDocId) {
+        editDocument(currentViewingDocId);
+      }
+      break;
+    
+    case 'close-modal':
+      closeModal(target);
+      break;
+  }
+});
+
+// Filter listeners
+qs('#searchInput')?.addEventListener('input', filterDocuments);
+qs('#typeFilter')?.addEventListener('change', filterDocuments);
+qs('#statusFilter')?.addEventListener('change', filterDocuments);
+qs('#dateFilter')?.addEventListener('change', filterDocuments);
+
+// Close modal on ESC key
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const activeModals = qsa('.modal-overlay.active');
+    activeModals.forEach(modal => {
+      closeModal(modal.id);
+    });
+  }
+});
+
+// Close modal when clicking outside
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
+    closeModal(e.target.id);
+  }
+});
+
+/* -----------------------------
+   Initialize
+------------------------------ */
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('[manage_documents_cards.js] Initializing...');
+  loadDocuments();
+>>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
 });
