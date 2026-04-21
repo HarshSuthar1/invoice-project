@@ -11,6 +11,7 @@ function document_parse_item_metadata(array $item): array
 {
     $item['description_extra'] = '';
     $item['sub_items'] = [];
+    $item['date'] = '';
 
     $raw = trim((string) ($item['specifications'] ?? ''));
     if ($raw !== '') {
@@ -19,6 +20,7 @@ function document_parse_item_metadata(array $item): array
         if (is_array($decoded)) {
             $item['description_extra'] = trim((string) ($decoded['description_extra'] ?? ''));
             $item['sub_items'] = is_array($decoded['sub_items'] ?? null) ? $decoded['sub_items'] : [];
+            $item['date'] = trim((string) ($decoded['item_date'] ?? ''));
         } else {
             $item['description_extra'] = $raw;
         }
@@ -28,6 +30,10 @@ function document_parse_item_metadata(array $item): array
         $parts = preg_split("/\r\n|\n|\r/", (string) $item['description']);
         $item['description'] = array_shift($parts) ?? '';
         $item['description_extra'] = trim(implode(PHP_EOL, $parts));
+    }
+
+    if ($item['date'] === '') {
+        $item['date'] = trim((string) ($item['item_date'] ?? ''));
     }
 
     return $item;

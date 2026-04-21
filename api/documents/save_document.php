@@ -80,11 +80,32 @@ function document_normalize_sub_items(mixed $subItems): array
     return $normalized;
 }
 
+function document_nullable_trimmed_string(mixed $value): ?string
+{
+    $trimmed = trim((string) ($value ?? ''));
+    return $trimmed === '' ? null : $trimmed;
+}
+
+function document_normalize_item_date(mixed $value): ?string
+{
+    $raw = trim((string) ($value ?? ''));
+    if ($raw === '') {
+        return null;
+    }
+
+    try {
+        return (new DateTimeImmutable($raw))->format('Y-m-d');
+    } catch (Throwable) {
+        return null;
+    }
+}
+
 function document_item_metadata(array $item): ?string
 {
     $metadata = [];
     $extraDescription = trim((string) ($item['description_extra'] ?? ''));
     $subItems = document_normalize_sub_items($item['sub_items'] ?? []);
+    $itemDate = document_normalize_item_date($item['date'] ?? null);
 
     if ($extraDescription !== '') {
         $metadata['description_extra'] = $extraDescription;
@@ -92,6 +113,10 @@ function document_item_metadata(array $item): ?string
 
     if ($subItems !== []) {
         $metadata['sub_items'] = $subItems;
+    }
+
+    if ($itemDate !== null) {
+        $metadata['item_date'] = $itemDate;
     }
 
     if ($metadata === []) {
@@ -127,6 +152,10 @@ function document_prepare_item_insert(mysqli $conn): array
         if (isset($available[$column])) {
             $insertColumns[] = $column;
         }
+    }
+
+    if (isset($available['item_date'])) {
+        $insertColumns[] = 'item_date';
     }
 
     if (isset($available['quantity'])) {
@@ -182,6 +211,7 @@ function document_prepare_main_values(
     float $subtotal,
     float $totalTax,
     float $discount,
+    string $discountType,
     float $grandTotal,
     float $amountReceived,
     string $status,
@@ -208,10 +238,11 @@ function document_prepare_main_values(
         'subtotal' => $subtotal,
         'total_tax' => $totalTax,
         'discount' => $discount,
+        'discount_type' => strtolower(trim($discountType)) === 'percent' ? 'percent' : 'flat',
         'grand_total' => $grandTotal,
         'amount_received' => $amountReceived,
         'status' => trim($status) ?: 'unpaid',
-        'issuer_type' => $issuerType,
+        'issuer_type' => strtolower(trim((string) $issuerType)) === 'personal' ? 'personal' : 'company',
         'document_image' => $documentImage,
         'notes' => trim((string) $notes),
         'vehicle_number' => trim((string) $vehicleNumber),
@@ -295,11 +326,12 @@ try {
     $subtotal         = (float) ($_POST['subtotal'] ?? 0);
     $total_tax        = (float) ($_POST['total_tax'] ?? 0);
     $discount         = (float) ($_POST['discount'] ?? 0);
+    $discount_type    = $_POST['discount_type'] ?? 'flat';
     $amount_received  = (float) ($_POST['amount_received'] ?? 0);
     $items            = json_decode($_POST['items'], true);
     $notes            = $_POST['notes'] ?? '';
 
-    // Handle pasted image (base64 encoded) - only for quotations and bills
+    // Handle pasted image (base64 encoded) - supported by the unified document flow
     $document_image   = null;
     if (in_array($document_type, ['quotation', 'bill-no-gst']) && !empty($_POST['document_image'])) {
         $document_image = $_POST['document_image']; // Already base64 encoded from frontend
@@ -327,6 +359,7 @@ try {
             $subtotal,
             $total_tax,
             $discount,
+            $discount_type,
             $grand_total,
             $amount_received,
             $status,
@@ -359,7 +392,7 @@ try {
         $document_id = document_insert_main_record($conn, $mainValues);
     }
 
-    // Insert items - all use invoice_items table for now
+    // Unified document model: all document items are stored in invoice_items
     $itemInsert = document_prepare_item_insert($conn);
     $stmt = $itemInsert['statement'];
     $itemColumns = $itemInsert['columns'];
@@ -377,13 +410,14 @@ try {
                 'invoice_id' => $document_id,
                 'description' => trim((string) ($item['description'] ?? '')),
                 'specifications' => $metadata,
-                'hsn_code' => trim((string) ($item['hsn_code'] ?? '')),
+                'hsn_code' => document_nullable_trimmed_string($item['hsn_code'] ?? null),
+                'item_date' => document_normalize_item_date($item['date'] ?? null),
                 'quantity' => $qty,
                 'unit' => trim((string) ($item['unit'] ?? 'Nos')) ?: 'Nos',
                 'unit_price', 'price' => $price,
                 'tax_rate', 'tax' => $tax,
                 'line_total', 'total' => $line_total,
-                'image_url', 'item_image' => $item['image'] ?? null,
+                'image_url', 'item_image' => document_nullable_trimmed_string($item['image'] ?? null),
                 'item_order' => $index,
                 default => null,
             };

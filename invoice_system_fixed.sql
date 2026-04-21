@@ -29,97 +29,14 @@ DELIMITER $$
 --
 CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_get_next_quotation_number` ()   BEGIN
   DECLARE next_num INT;
-  SELECT COALESCE(MAX(CAST(SUBSTRING(quotation_number,5) AS UNSIGNED)),0)+1
-  INTO next_num FROM quotations WHERE quotation_number LIKE 'QUO-%';
-  SELECT CONCAT('QUO-',LPAD(next_num,4,'0')) AS next_quotation_number;
-END$$
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_mark_expired_quotations` ()   BEGIN
-  UPDATE quotations
-  SET status='Expired'
-  WHERE status IN ('Sent','Draft') AND valid_until < CURDATE();
+  SELECT COALESCE(MAX(CAST(SUBSTRING(invoice_number,4) AS UNSIGNED)),0)+1
+  INTO next_num
+  FROM invoices
+  WHERE document_type = 'quotation' AND invoice_number LIKE 'QT-%';
+  SELECT CONCAT('QT-',LPAD(next_num,4,'0')) AS next_quotation_number;
 END$$
 
 DELIMITER ;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `bills`
---
-
-CREATE TABLE `bills` (
-  `id` int(11) NOT NULL,
-  `document_number` varchar(50) NOT NULL,
-  `client_id` int(11) NOT NULL,
-  `document_date` date NOT NULL,
-  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `total_tax` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `grand_total` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `status` enum('unpaid','paid','partially paid','cancelled') DEFAULT 'unpaid',
-  `amount_received` decimal(10,2) DEFAULT 0.00,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `bill_items`
---
-
-CREATE TABLE `bill_items` (
-  `id` int(11) NOT NULL,
-  `document_id` int(11) NOT NULL,
-  `description` text NOT NULL,
-  `quantity` decimal(10,2) NOT NULL DEFAULT 1.00,
-  `unit` varchar(50) DEFAULT 'Nos',
-  `unit_price` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `tax_rate` decimal(5,2) DEFAULT 0.00,
-  `line_total` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `challans`
---
-
-CREATE TABLE `challans` (
-  `id` int(11) NOT NULL,
-  `document_number` varchar(50) NOT NULL,
-  `client_id` int(11) NOT NULL,
-  `document_date` date NOT NULL,
-  `vehicle_number` varchar(50) DEFAULT NULL,
-  `driver_name` varchar(100) DEFAULT NULL,
-  `destination` varchar(255) DEFAULT NULL,
-  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `total_tax` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `grand_total` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `status` enum('pending','delivered','returned','cancelled') DEFAULT 'pending',
-  `amount_received` decimal(10,2) DEFAULT 0.00,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `challan_items`
---
-
-CREATE TABLE `challan_items` (
-  `id` int(11) NOT NULL,
-  `document_id` int(11) NOT NULL,
-  `description` text NOT NULL,
-  `quantity` decimal(10,2) NOT NULL DEFAULT 1.00,
-  `unit` varchar(50) DEFAULT 'Nos',
-  `unit_price` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `tax_rate` decimal(5,2) DEFAULT 0.00,
-  `line_total` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -258,9 +175,9 @@ INSERT INTO `hsn_codes` (`id`, `hsn_code`, `description`, `gst_rate`, `category`
 CREATE TABLE `invoices` (
   `id` int(11) NOT NULL,
   `invoice_number` varchar(50) NOT NULL,
-  `document_type` enum('Tax Invoice','Bill of Supply','Proforma Invoice','Delivery Challan') DEFAULT 'Tax Invoice',
+  `document_type` varchar(30) NOT NULL DEFAULT 'invoice' COMMENT 'invoice, quotation, bill-no-gst, challan',
   `client_id` int(11) NOT NULL,
-  `created_from_quotation_id` int(11) DEFAULT NULL,
+  `source_document_id` int(11) DEFAULT NULL COMMENT 'Optional parent document in the unified document flow',
   `invoice_date` date NOT NULL,
   `due_date` date NOT NULL,
   `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
@@ -269,14 +186,17 @@ CREATE TABLE `invoices` (
   `sgst_amount` decimal(10,2) DEFAULT 0.00,
   `igst_amount` decimal(10,2) DEFAULT 0.00,
   `discount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `discount_type` varchar(10) NOT NULL DEFAULT 'flat' COMMENT 'flat or percent',
   `grand_total` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `status` enum('Unpaid','Paid','Partially Paid','Cancelled') DEFAULT 'Unpaid',
+  `status` varchar(30) NOT NULL DEFAULT 'unpaid',
+  `issuer_type` varchar(20) NOT NULL DEFAULT 'company' COMMENT 'company or personal',
   `place_of_supply` varchar(100) DEFAULT NULL,
   `state_code` varchar(2) DEFAULT NULL,
   `is_interstate` tinyint(1) DEFAULT 0,
   `reverse_charge` tinyint(1) DEFAULT 0,
   `amount_received` decimal(10,2) DEFAULT 0.00,
   `notes` text DEFAULT NULL,
+  `document_image` longtext DEFAULT NULL COMMENT 'Base64 data URL or remote URL for quotation/bill imagery',
   `vehicle_number` varchar(50) DEFAULT NULL,
   `transport_mode` varchar(50) DEFAULT NULL,
   `lr_number` varchar(50) DEFAULT NULL COMMENT 'Lorry Receipt Number',
@@ -296,7 +216,8 @@ CREATE TABLE `invoice_items` (
   `invoice_id` int(11) NOT NULL,
   `description` text NOT NULL,
   `hsn_code` varchar(20) DEFAULT NULL,
-  `specifications` text DEFAULT NULL,
+  `specifications` longtext DEFAULT NULL COMMENT 'JSON metadata for description_extra and sub_items',
+  `item_date` date DEFAULT NULL COMMENT 'Per-row date used by challan rows in the unified document flow',
   `quantity` decimal(10,2) NOT NULL DEFAULT 1.00,
   `unit` varchar(50) DEFAULT 'Nos',
   `unit_price` decimal(10,2) NOT NULL DEFAULT 0.00,
@@ -309,79 +230,11 @@ CREATE TABLE `invoice_items` (
   `igst_rate` decimal(5,2) DEFAULT 0.00,
   `igst_amount` decimal(10,2) DEFAULT 0.00,
   `line_total` decimal(10,2) NOT NULL DEFAULT 0.00,
-  `image_url` varchar(500) DEFAULT NULL,
+  `image_url` longtext DEFAULT NULL COMMENT 'Supports pasted base64 data URLs as well as remote URLs',
   `images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`images`)),
   `item_order` int(11) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `quotations`
---
-
-CREATE TABLE `quotations` (
-  `id` int(11) NOT NULL,
-  `quotation_number` varchar(50) NOT NULL,
-  `client_id` int(11) NOT NULL,
-  `quotation_date` date NOT NULL,
-  `valid_until` date NOT NULL,
-  `subtotal` decimal(10,2) DEFAULT 0.00,
-  `total_tax` decimal(10,2) DEFAULT 0.00,
-  `discount` decimal(10,2) DEFAULT 0.00,
-  `grand_total` decimal(10,2) DEFAULT 0.00,
-  `status` enum('Draft','Sent','Approved','Rejected','Converted','Expired') DEFAULT 'Draft',
-  `notes` text DEFAULT NULL,
-  `terms_conditions` text DEFAULT NULL,
-  `internal_notes` text DEFAULT NULL COMMENT 'Private notes not shown to client',
-  `converted_to_invoice_id` int(11) DEFAULT NULL,
-  `converted_at` timestamp NULL DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `quotation_items`
---
-
-CREATE TABLE `quotation_items` (
-  `id` int(11) NOT NULL,
-  `quotation_id` int(11) NOT NULL,
-  `description` text NOT NULL,
-  `specifications` text DEFAULT NULL COMMENT 'Technical specifications for metal work',
-  `hsn_code` varchar(20) DEFAULT NULL,
-  `quantity` decimal(10,2) DEFAULT 1.00,
-  `unit` varchar(50) DEFAULT 'Nos',
-  `unit_price` decimal(10,2) DEFAULT 0.00,
-  `tax_rate` decimal(5,2) DEFAULT 18.00,
-  `tax_amount` decimal(10,2) DEFAULT 0.00,
-  `line_total` decimal(10,2) DEFAULT 0.00,
-  `image_url` varchar(500) DEFAULT NULL COMMENT 'Primary image URL',
-  `images` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Array of multiple image URLs' CHECK (json_valid(`images`)),
-  `item_order` int(11) DEFAULT 0 COMMENT 'Display order in quotation',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Triggers `quotation_items`
---
-DELIMITER $$
-CREATE TRIGGER `trg_quotation_item_insert` BEFORE INSERT ON `quotation_items` FOR EACH ROW BEGIN
-  SET NEW.tax_amount = (NEW.quantity * NEW.unit_price) * (NEW.tax_rate / 100);
-  SET NEW.line_total = (NEW.quantity * NEW.unit_price) + NEW.tax_amount;
-END
-$$
-DELIMITER ;
-DELIMITER $$
-CREATE TRIGGER `trg_quotation_item_update` BEFORE UPDATE ON `quotation_items` FOR EACH ROW BEGIN
-  SET NEW.tax_amount = (NEW.quantity * NEW.unit_price) * (NEW.tax_rate / 100);
-  SET NEW.line_total = (NEW.quantity * NEW.unit_price) + NEW.tax_amount;
-END
-$$
-DELIMITER ;
 
 -- --------------------------------------------------------
 
@@ -419,7 +272,7 @@ CREATE TABLE `v_active_quotations` (
 ,`quotation_number` varchar(50)
 ,`quotation_date` date
 ,`valid_until` date
-,`status` enum('Draft','Sent','Approved','Rejected','Converted','Expired')
+,`status` varchar(30)
 ,`grand_total` decimal(10,2)
 ,`client_name` varchar(255)
 ,`item_count` bigint(21)
@@ -432,7 +285,7 @@ CREATE TABLE `v_active_quotations` (
 -- (See below for the actual view)
 --
 CREATE TABLE `v_invoice_document_summary` (
-`document_type` enum('Tax Invoice','Bill of Supply','Proforma Invoice','Delivery Challan')
+`document_type` varchar(30)
 ,`invoice_count` bigint(21)
 ,`total_amount` decimal(32,2)
 ,`received_amount` decimal(32,2)
@@ -460,7 +313,7 @@ CREATE TABLE `v_quotation_conversion_stats` (
 --
 DROP TABLE IF EXISTS `v_active_quotations`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_active_quotations`  AS SELECT `q`.`id` AS `id`, `q`.`quotation_number` AS `quotation_number`, `q`.`quotation_date` AS `quotation_date`, `q`.`valid_until` AS `valid_until`, `q`.`status` AS `status`, `q`.`grand_total` AS `grand_total`, `c`.`company_name` AS `client_name`, count(`qi`.`id`) AS `item_count` FROM ((`quotations` `q` join `clients` `c` on(`q`.`client_id` = `c`.`id`)) left join `quotation_items` `qi` on(`q`.`id` = `qi`.`quotation_id`)) WHERE `q`.`status` not in ('Rejected','Converted') GROUP BY `q`.`id` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_active_quotations`  AS SELECT `i`.`id` AS `id`, `i`.`invoice_number` AS `quotation_number`, `i`.`invoice_date` AS `quotation_date`, `i`.`due_date` AS `valid_until`, `i`.`status` AS `status`, `i`.`grand_total` AS `grand_total`, `c`.`company_name` AS `client_name`, count(`ii`.`id`) AS `item_count` FROM ((`invoices` `i` join `clients` `c` on(`i`.`client_id` = `c`.`id`)) left join `invoice_items` `ii` on(`i`.`id` = `ii`.`invoice_id`)) WHERE `i`.`document_type` = 'quotation' AND lower(coalesce(`i`.`status`,'')) <> 'cancelled' GROUP BY `i`.`id` ;
 
 -- --------------------------------------------------------
 
@@ -478,41 +331,11 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW 
 --
 DROP TABLE IF EXISTS `v_quotation_conversion_stats`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_quotation_conversion_stats`  AS SELECT count(0) AS `total_quotations`, sum(case when `quotations`.`status` = 'Converted' then 1 else 0 end) AS `converted_count`, sum(case when `quotations`.`status` = 'Rejected' then 1 else 0 end) AS `rejected_count`, sum(case when `quotations`.`status` = 'Sent' then 1 else 0 end) AS `pending_count`, CASE WHEN count(0) = 0 THEN 0 ELSE round(sum(case when `quotations`.`status` = 'Converted' then 1 else 0 end) * 100.0 / count(0),2) END AS `conversion_rate`, sum(case when `quotations`.`status` = 'Converted' then `quotations`.`grand_total` else 0 end) AS `converted_value` FROM `quotations` WHERE `quotations`.`status` <> 'Draft' ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `v_quotation_conversion_stats`  AS SELECT count(distinct `q`.`id`) AS `total_quotations`, count(distinct case when `child`.`id` is not null then `q`.`id` else null end) AS `converted_count`, sum(case when lower(coalesce(`q`.`status`,'')) = 'cancelled' then 1 else 0 end) AS `rejected_count`, sum(case when lower(coalesce(`q`.`status`,'')) <> 'cancelled' and `child`.`id` is null then 1 else 0 end) AS `pending_count`, CASE WHEN count(distinct `q`.`id`) = 0 THEN 0 ELSE round(count(distinct case when `child`.`id` is not null then `q`.`id` else null end) * 100.0 / count(distinct `q`.`id`),2) END AS `conversion_rate`, sum(case when `child`.`id` is not null then `q`.`grand_total` else 0 end) AS `converted_value` FROM (`invoices` `q` left join `invoices` `child` on(`child`.`source_document_id` = `q`.`id` and `child`.`document_type` = 'invoice')) WHERE `q`.`document_type` = 'quotation' ;
 
 --
 -- Indexes for dumped tables
 --
-
---
--- Indexes for table `bills`
---
-ALTER TABLE `bills`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `document_number` (`document_number`),
-  ADD KEY `client_id` (`client_id`);
-
---
--- Indexes for table `bill_items`
---
-ALTER TABLE `bill_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `document_id` (`document_id`);
-
---
--- Indexes for table `challans`
---
-ALTER TABLE `challans`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `document_number` (`document_number`),
-  ADD KEY `client_id` (`client_id`);
-
---
--- Indexes for table `challan_items`
---
-ALTER TABLE `challan_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `document_id` (`document_id`);
 
 --
 -- Indexes for table `clients`
@@ -546,7 +369,7 @@ ALTER TABLE `invoices`
   ADD UNIQUE KEY `invoice_number` (`invoice_number`),
   ADD KEY `client_id` (`client_id`),
   ADD KEY `idx_invoice_doc_type` (`document_type`),
-  ADD KEY `idx_invoice_quotation` (`created_from_quotation_id`),
+  ADD KEY `idx_invoice_source_document` (`source_document_id`),
   ADD KEY `idx_invoice_state` (`state_code`);
 
 --
@@ -557,30 +380,6 @@ ALTER TABLE `invoice_items`
   ADD KEY `invoice_id` (`invoice_id`),
   ADD KEY `idx_invoice_hsn` (`hsn_code`);
 
---
--- Indexes for table `quotations`
---
-ALTER TABLE `quotations`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `quotation_number` (`quotation_number`),
-  ADD KEY `converted_to_invoice_id` (`converted_to_invoice_id`),
-  ADD KEY `idx_quotation_number` (`quotation_number`),
-  ADD KEY `idx_client_id` (`client_id`),
-  ADD KEY `idx_status` (`status`),
-  ADD KEY `idx_quotation_date` (`quotation_date`),
-  ADD KEY `idx_valid_until` (`valid_until`);
-
---
--- Indexes for table `quotation_items`
---
-ALTER TABLE `quotation_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `idx_quotation_id` (`quotation_id`),
-  ADD KEY `idx_hsn_code` (`hsn_code`);
-
---
--- Indexes for table `users`
---
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
@@ -589,30 +388,6 @@ ALTER TABLE `users`
 --
 -- AUTO_INCREMENT for dumped tables
 --
-
---
--- AUTO_INCREMENT for table `bills`
---
-ALTER TABLE `bills`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `bill_items`
---
-ALTER TABLE `bill_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `challans`
---
-ALTER TABLE `challans`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `challan_items`
---
-ALTER TABLE `challan_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `clients`
@@ -645,18 +420,6 @@ ALTER TABLE `invoice_items`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=60;
 
 --
--- AUTO_INCREMENT for table `quotations`
---
-ALTER TABLE `quotations`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
-
---
--- AUTO_INCREMENT for table `quotation_items`
---
-ALTER TABLE `quotation_items`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
-
---
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
@@ -667,34 +430,10 @@ ALTER TABLE `users`
 --
 
 --
--- Constraints for table `bills`
---
-ALTER TABLE `bills`
-  ADD CONSTRAINT `bills_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`);
-
---
--- Constraints for table `bill_items`
---
-ALTER TABLE `bill_items`
-  ADD CONSTRAINT `bill_items_ibfk_1` FOREIGN KEY (`document_id`) REFERENCES `bills` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `challans`
---
-ALTER TABLE `challans`
-  ADD CONSTRAINT `challans_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`);
-
---
--- Constraints for table `challan_items`
---
-ALTER TABLE `challan_items`
-  ADD CONSTRAINT `challan_items_ibfk_1` FOREIGN KEY (`document_id`) REFERENCES `challans` (`id`) ON DELETE CASCADE;
-
---
 -- Constraints for table `invoices`
 --
 ALTER TABLE `invoices`
-  ADD CONSTRAINT `fk_invoices_quotation` FOREIGN KEY (`created_from_quotation_id`) REFERENCES `quotations` (`id`) ON DELETE SET NULL,
+  ADD CONSTRAINT `fk_invoices_source_document` FOREIGN KEY (`source_document_id`) REFERENCES `invoices` (`id`) ON DELETE SET NULL,
   ADD CONSTRAINT `invoices_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`);
 
 --
@@ -703,20 +442,6 @@ ALTER TABLE `invoices`
 ALTER TABLE `invoice_items`
   ADD CONSTRAINT `fk_invoice_items_hsn` FOREIGN KEY (`hsn_code`) REFERENCES `hsn_codes` (`hsn_code`) ON DELETE SET NULL,
   ADD CONSTRAINT `invoice_items_ibfk_1` FOREIGN KEY (`invoice_id`) REFERENCES `invoices` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `quotations`
---
-ALTER TABLE `quotations`
-  ADD CONSTRAINT `quotations_ibfk_1` FOREIGN KEY (`client_id`) REFERENCES `clients` (`id`),
-  ADD CONSTRAINT `quotations_ibfk_2` FOREIGN KEY (`converted_to_invoice_id`) REFERENCES `invoices` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `quotation_items`
---
-ALTER TABLE `quotation_items`
-  ADD CONSTRAINT `quotation_items_ibfk_1` FOREIGN KEY (`quotation_id`) REFERENCES `quotations` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `quotation_items_ibfk_2` FOREIGN KEY (`hsn_code`) REFERENCES `hsn_codes` (`hsn_code`) ON DELETE SET NULL;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

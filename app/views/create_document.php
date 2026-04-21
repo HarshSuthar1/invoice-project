@@ -31,6 +31,7 @@ if ($isInvoice) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/Business%20project/assets/css/app.css?v=20260417c">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <title>Create <?php echo $docTitle; ?></title>
     <style>
         .section-header-bar {
@@ -491,43 +492,94 @@ if ($isInvoice) {
 
         .sub-lines-list {
             display: grid;
-            gap: 8px;
+            gap: 10px;
         }
 
         .sub-line-row {
             display: grid;
-            gap: 8px;
-            padding: 10px;
-            border-radius: 12px;
+            gap: 10px;
+            padding: 12px;
+            border-radius: 14px;
             border: 1px solid var(--border-color);
-            background: var(--surface-subtle);
+            border-left: 3px solid var(--sidebar-active);
+            background:
+                linear-gradient(180deg, rgba(59, 130, 246, 0.08), rgba(59, 130, 246, 0) 42%),
+                var(--surface-subtle);
+        }
+
+        .sub-line-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .sub-line-title {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .sub-line-desc {
+            min-height: 56px;
+            resize: vertical;
         }
 
         .sub-line-grid {
             display: grid;
-            grid-template-columns: minmax(68px, 0.8fr) minmax(76px, 0.9fr) minmax(92px, 1fr) auto auto;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
             gap: 8px;
             align-items: center;
         }
 
+        .sub-line-field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .sub-line-field-label,
+        .sub-line-amount-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .sub-line-field input {
+            min-width: 0;
+        }
+
+        .sub-line-amount {
+            min-width: 92px;
+            display: grid;
+            gap: 4px;
+            justify-items: end;
+            padding: 8px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(59, 130, 246, 0.18);
+            background: rgba(15, 23, 42, 0.18);
+        }
+
         .sub-line-total {
-            min-width: 84px;
             text-align: right;
-            font-size: 12px;
+            font-size: 16px;
             font-weight: 700;
             color: var(--text-heading);
-            align-self: center;
         }
 
         .remove-sub-line-btn {
-            width: 30px;
-            height: 30px;
+            width: 34px;
+            height: 34px;
             border: none;
             border-radius: 999px;
             background: rgba(239, 68, 68, 0.12);
             color: #ef4444;
             font-size: 16px;
             cursor: pointer;
+            flex: 0 0 auto;
         }
 
         .remove-sub-line-btn:hover {
@@ -538,6 +590,32 @@ if ($isInvoice) {
             margin: 8px 0 0;
             font-size: 12px;
             color: var(--text-muted);
+        }
+
+        .document-action-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .document-secondary-button {
+            background: var(--surface-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+        }
+
+        .document-secondary-button:hover {
+            background: var(--surface-subtle);
+            border-color: var(--sidebar-active);
+            transform: translateY(-1px);
         }
 
         .grouped-document-table td .hsn,
@@ -645,7 +723,7 @@ if ($isInvoice) {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
-            .sub-line-total,
+            .sub-line-amount,
             .remove-sub-line-btn {
                 justify-self: start;
             }
@@ -657,6 +735,20 @@ if ($isInvoice) {
 
             .grouped-document-table {
                 table-layout: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .sub-line-head {
+                align-items: flex-start;
+            }
+
+            .sub-line-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sub-line-amount {
+                justify-items: start;
             }
         }
     </style>
@@ -863,6 +955,11 @@ if ($isInvoice) {
                 </div>
 
                 <div class="create-invoice-button-container">
+                    <div class="document-action-row">
+                        <button type="button" class="document-secondary-button" data-action="download-document-pdf">
+                            Download PDF
+                        </button>
+                    </div>
                     <button type="button" class="create-invoice-button" data-action="save-document">
                         Create <?php echo $docTitle; ?>
                     </button>
@@ -1164,13 +1261,28 @@ function createSubLineElement(data = {}) {
     const wrapper = document.createElement('div');
     wrapper.className = 'sub-line-row';
     wrapper.innerHTML = `
+        <div class="sub-line-head">
+            <span class="sub-line-title">Extra billed line</span>
+            <button type="button" class="remove-sub-line-btn" data-action="remove-sub-line" title="Remove extra line">&times;</button>
+        </div>
         <textarea class="sub-line-desc" rows="2" placeholder="Extra billed line, e.g. Gray Powder Coating">${escapeField(data.description || '')}</textarea>
         <div class="sub-line-grid">
-            <input type="number" class="sub-line-qty" value="${escapeField(data.quantity || 1)}" min="0" step="0.01" placeholder="Qty">
-            <input type="text" class="sub-line-unit" value="${escapeField(data.unit || 'Nos')}" placeholder="Unit">
-            <input type="number" class="sub-line-price" value="${escapeField(data.price || 0)}" min="0" step="0.01" placeholder="Price">
-            <span class="sub-line-total">${formatCurrency(0)}</span>
-            <button type="button" class="remove-sub-line-btn" data-action="remove-sub-line" title="Remove extra line">×</button>
+            <label class="sub-line-field">
+                <span class="sub-line-field-label">Qty</span>
+                <input type="number" class="sub-line-qty" value="${escapeField(data.quantity || 1)}" min="0" step="0.01" placeholder="Qty">
+            </label>
+            <label class="sub-line-field">
+                <span class="sub-line-field-label">Unit</span>
+                <input type="text" class="sub-line-unit" value="${escapeField(data.unit || 'Nos')}" placeholder="Unit">
+            </label>
+            <label class="sub-line-field">
+                <span class="sub-line-field-label">Rate</span>
+                <input type="number" class="sub-line-price" value="${escapeField(data.price || 0)}" min="0" step="0.01" placeholder="Price">
+            </label>
+            <div class="sub-line-amount">
+                <span class="sub-line-amount-label">Amount</span>
+                <span class="sub-line-total">${formatCurrency(0)}</span>
+            </div>
         </div>
     `;
 
@@ -1549,6 +1661,7 @@ async function importDocument(docId) {
 
         items.forEach(item => {
             addItemRow({
+                date:        item.date || item.item_date || doc.invoice_date || '',
                 description: item.description || '',
                 description_extra: item.description_extra || '',
                 hsn:         item.hsn_code || item.hsn || '',
@@ -1606,6 +1719,7 @@ async function loadDocumentForEdit(docId) {
 
         items.forEach(item => {
             addItemRow({
+                date: item.date || item.item_date || doc.invoice_date || '',
                 description: item.description || '',
                 description_extra: item.description_extra || '',
                 hsn: item.hsn_code || item.hsn || '',
@@ -1634,6 +1748,323 @@ async function loadDocumentForEdit(docId) {
         showError('Failed to load document for editing');
         if (!qsa('#documentItemsBody tr').length) addItemRow();
     }
+}
+
+function escapePdfHtml(value) {
+    return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+}
+
+function formatPdfDate(value) {
+    if (!value) return '-';
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return escapePdfHtml(value);
+
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}-${month}-${year}`;
+}
+
+let profilePdfPromise = null;
+
+async function fetchProfileSnapshot() {
+    if (!profilePdfPromise) {
+        profilePdfPromise = (async () => {
+            try {
+                const res = await apiFetch('/api/profile/get_profile.php');
+                return res.profile || res.data?.profile || {};
+            } catch (err) {
+                console.error('[create_document.js] Failed to fetch profile for PDF:', err);
+                return {};
+            }
+        })();
+    }
+
+    return profilePdfPromise;
+}
+
+function getCurrentDocumentSnapshot(profile = {}) {
+    const clientSelect = qs('#clientSelect');
+    const selectedClient = clientSelect?.options[clientSelect.selectedIndex];
+    const clientName = selectedClient?.textContent?.trim() || 'Unselected client';
+    const documentNumber = qs('#document-number')?.value.trim() || `${currentDocType.toUpperCase()}-DRAFT`;
+    const documentDate = qs('#document-date')?.value || '';
+    const isPersonalIssuer = issuerType === 'personal';
+    const issuerName = isPersonalIssuer
+        ? 'Harsh'
+        : (profile.company_name?.trim() || 'GS Metal Concept');
+
+    const items = qsa('#documentItemsBody tr').map((row) => {
+        if (isChallan) {
+            const quantity = Number(row.querySelector('.qty')?.value || 0);
+            const price = Number(row.querySelector('.price')?.value || 0);
+
+            return {
+                date: row.querySelector('.row-date')?.value || '',
+                description: row.querySelector('.desc')?.value.trim() || '',
+                quantity,
+                unit: 'Rounds',
+                price,
+                total: quantity * price
+            };
+        }
+
+        const quantity = Number(row.querySelector('.qty')?.value || 0);
+        const price = Number(row.querySelector('.price')?.value || 0);
+        const taxRate = showTax ? Number(row.querySelector('.tax')?.value || 0) : 0;
+        const subItems = collectSubItems(row).items;
+        const subTotal = subItems.reduce((sum, subItem) => {
+            return sum + (Number(subItem.quantity) || 0) * (Number(subItem.price) || 0);
+        }, 0);
+        const baseAmount = (quantity * price) + subTotal;
+        const total = baseAmount + ((baseAmount * taxRate) / 100);
+
+        return {
+            description: row.querySelector('.desc-main')?.value.trim() || '',
+            descriptionExtra: row.querySelector('.desc-extra')?.value.trim() || '',
+            hsn: row.querySelector('.hsn')?.value.trim() || '',
+            quantity,
+            unit: row.querySelector('.unit')?.value.trim() || 'Nos',
+            price,
+            taxRate,
+            total,
+            subItems,
+            image: row.querySelector('.image-paste-box')?.dataset.imageData || ''
+        };
+    }).filter((item) => item.description);
+
+    return {
+        title: documentTitle,
+        issuerName,
+        isPersonalIssuer,
+        clientName,
+        documentNumber,
+        documentDate,
+        subtotal: qs('#subtotal')?.textContent?.trim() || formatCurrency(0),
+        cgst: qs('#cgst')?.textContent?.trim() || formatCurrency(0),
+        sgst: qs('#sgst')?.textContent?.trim() || formatCurrency(0),
+        totalTax: qs('#totalTax')?.textContent?.trim() || formatCurrency(0),
+        discountLabel: qs('#discountLabel')?.textContent?.trim() || 'Discount',
+        discountValue: qs('#discountDisplay')?.textContent?.trim() || '',
+        grandTotal: qs('#grandTotal')?.textContent?.trim() || formatCurrency(0),
+        profile,
+        items
+    };
+}
+
+function buildDocumentPdfHtml(snapshot) {
+    const profile = snapshot.profile || {};
+    const profileDetailLines = [
+        profile.email ? `Email: ${escapePdfHtml(profile.email)}` : '',
+        profile.phone ? `Phone: ${escapePdfHtml(profile.phone)}` : '',
+        profile.website ? `Website: ${escapePdfHtml(profile.website)}` : '',
+        profile.address ? `${escapePdfHtml(profile.address)}` : '',
+        !snapshot.isPersonalIssuer && profile.gst_number ? `GST: ${escapePdfHtml(profile.gst_number)}` : '',
+        !snapshot.isPersonalIssuer && profile.pan_number ? `PAN: ${escapePdfHtml(profile.pan_number)}` : ''
+    ].filter(Boolean);
+
+    const bankLines = [
+        profile.bank_name ? `Bank: ${escapePdfHtml(profile.bank_name)}` : '',
+        profile.account_holder_name ? `A/C Name: ${escapePdfHtml(profile.account_holder_name)}` : '',
+        profile.account_number ? `A/C No: ${escapePdfHtml(profile.account_number)}` : '',
+        profile.ifsc_code ? `IFSC: ${escapePdfHtml(profile.ifsc_code)}` : '',
+        profile.branch_name ? `Branch: ${escapePdfHtml(profile.branch_name)}` : '',
+        profile.swift_code ? `SWIFT: ${escapePdfHtml(profile.swift_code)}` : ''
+    ].filter(Boolean);
+
+    const rowsHtml = snapshot.items.map((item, index) => {
+        if (isChallan) {
+            return `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${formatPdfDate(item.date)}</td>
+                    <td>${escapePdfHtml(item.description)}</td>
+                    <td style="text-align:right;">${escapePdfHtml(item.quantity)}</td>
+                    <td style="text-align:right;">${escapePdfHtml(item.unit)}</td>
+                    <td style="text-align:right;">${formatCurrency(item.price)}</td>
+                    <td style="text-align:right;">${formatCurrency(item.total)}</td>
+                </tr>
+            `;
+        }
+
+        const extraText = item.descriptionExtra
+            ? `<div style="margin-top:4px;font-size:12px;color:#6b7280;">${escapePdfHtml(item.descriptionExtra)}</div>`
+            : '';
+
+        const subLines = item.subItems.length
+            ? `<div style="margin-top:6px;font-size:12px;color:#374151;">
+                ${item.subItems.map((subItem) => `
+                    <div style="margin-top:4px;">
+                        ${escapePdfHtml(subItem.description)} (${escapePdfHtml(subItem.quantity)} ${escapePdfHtml(subItem.unit)} x ${formatCurrency(subItem.price)})
+                    </div>
+                `).join('')}
+               </div>`
+            : '';
+
+        const imageBlock = item.image
+            ? `<div style="margin-top:8px;"><img src="${item.image}" alt="Item" style="max-width:84px;max-height:84px;border:1px solid #d1d5db;border-radius:6px;"></div>`
+            : '';
+
+        return `
+            <tr>
+                <td>${index + 1}</td>
+                <td>
+                    <div>${escapePdfHtml(item.description)}</div>
+                    ${extraText}
+                    ${subLines}
+                    ${imageBlock}
+                </td>
+                <td style="text-align:right;">${item.hsn ? escapePdfHtml(item.hsn) : '-'}</td>
+                <td style="text-align:right;">${escapePdfHtml(item.quantity)}</td>
+                <td style="text-align:right;">${escapePdfHtml(item.unit)}</td>
+                <td style="text-align:right;">${formatCurrency(item.price)}</td>
+                <td style="text-align:right;">${item.taxRate ? `${escapePdfHtml(item.taxRate)}%` : '-'}</td>
+                <td style="text-align:right;">${formatCurrency(item.total)}</td>
+            </tr>
+        `;
+    }).join('');
+
+    const summaryHtml = isChallan ? `
+        <div class="summary-card">
+            <div class="summary-line total">
+                <span>Total</span>
+                <span>${escapePdfHtml(snapshot.grandTotal)}</span>
+            </div>
+        </div>
+    ` : `
+        <div class="summary-card">
+            <div class="summary-line"><span>Subtotal</span><span>${escapePdfHtml(snapshot.subtotal)}</span></div>
+            ${showTax ? `<div class="summary-line"><span>CGST</span><span>${escapePdfHtml(snapshot.cgst)}</span></div>` : ''}
+            ${showTax ? `<div class="summary-line"><span>SGST</span><span>${escapePdfHtml(snapshot.sgst)}</span></div>` : ''}
+            <div class="summary-line"><span>Total Tax</span><span>${escapePdfHtml(snapshot.totalTax)}</span></div>
+            ${snapshot.discountValue ? `<div class="summary-line"><span>${escapePdfHtml(snapshot.discountLabel)}</span><span>${escapePdfHtml(snapshot.discountValue)}</span></div>` : ''}
+            <div class="summary-line total"><span>Total</span><span>${escapePdfHtml(snapshot.grandTotal)}</span></div>
+        </div>
+    `;
+
+    const tableHead = isChallan ? `
+        <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Rate</th>
+            <th>Amount</th>
+        </tr>
+    ` : `
+        <tr>
+            <th>#</th>
+            <th>Description</th>
+            <th>HSN</th>
+            <th>Qty</th>
+            <th>Unit</th>
+            <th>Rate</th>
+            <th>Tax</th>
+            <th>Amount</th>
+        </tr>
+    `;
+
+    const extraSections = [
+        bankLines.length ? `
+            <div class="pdf-section-card">
+                <div class="pdf-section-title">Bank Details</div>
+                <div class="pdf-section-copy">${bankLines.join('<br>')}</div>
+            </div>
+        ` : '',
+        profile.payment_instructions ? `
+            <div class="pdf-section-card">
+                <div class="pdf-section-title">Payment Instructions</div>
+                <div class="pdf-section-copy">${escapePdfHtml(profile.payment_instructions).replaceAll('\n', '<br>')}</div>
+            </div>
+        ` : '',
+        profile.invoice_terms ? `
+            <div class="pdf-section-card">
+                <div class="pdf-section-title">Terms & Conditions</div>
+                <div class="pdf-section-copy">${escapePdfHtml(profile.invoice_terms).replaceAll('\n', '<br>')}</div>
+            </div>
+        ` : ''
+    ].filter(Boolean).join('');
+
+    return `
+        <div style="font-family: Arial, sans-serif; color:#111827; padding:32px;">
+            <style>
+                .pdf-header { display:flex; justify-content:space-between; gap:20px; margin-bottom:24px; border-bottom:2px solid #1d4ed8; padding-bottom:16px; }
+                .pdf-title { font-size:34px; font-weight:800; margin:0 0 8px; color:#0f172a; }
+                .pdf-subtitle { font-size:14px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#2563eb; margin-bottom:10px; }
+                .pdf-meta { font-size:13px; color:#4b5563; line-height:1.7; }
+                .pdf-pill { display:inline-block; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; border-radius:999px; padding:6px 12px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; }
+                .pdf-table { width:100%; border-collapse:collapse; margin-top:20px; }
+                .pdf-table th { background:#f8fafc; border-bottom:2px solid #dbe4f0; padding:10px 8px; text-align:left; font-size:12px; text-transform:uppercase; color:#475569; }
+                .pdf-table td { border-bottom:1px solid #e5e7eb; padding:10px 8px; vertical-align:top; font-size:13px; }
+                .summary-wrap { display:flex; justify-content:flex-end; margin-top:24px; }
+                .summary-card { min-width:280px; border:1px solid #dbe4f0; border-radius:12px; padding:14px 16px; background:#f8fafc; }
+                .summary-line { display:flex; justify-content:space-between; gap:16px; padding:6px 0; font-size:14px; }
+                .summary-line.total { margin-top:6px; padding-top:10px; border-top:1px solid #cbd5e1; font-size:18px; font-weight:700; }
+                .pdf-sections-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; margin-top:28px; }
+                .pdf-section-card { border:1px solid #dbe4f0; border-radius:12px; padding:14px 16px; background:#ffffff; }
+                .pdf-section-title { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:#2563eb; margin-bottom:8px; }
+                .pdf-section-copy { font-size:13px; line-height:1.7; color:#334155; }
+            </style>
+            <div class="pdf-header">
+                <div>
+                    <div class="pdf-subtitle">${escapePdfHtml(snapshot.title)}</div>
+                    <h1 class="pdf-title">${escapePdfHtml(snapshot.issuerName)}</h1>
+                    <div class="pdf-meta">
+                        <div><strong>Document #:</strong> ${escapePdfHtml(snapshot.documentNumber)}</div>
+                        <div><strong>Date:</strong> ${formatPdfDate(snapshot.documentDate)}</div>
+                        <div><strong>Client:</strong> ${escapePdfHtml(snapshot.clientName)}</div>
+                        ${profileDetailLines.length ? `<div style="margin-top:8px;">${profileDetailLines.join('<br>')}</div>` : ''}
+                    </div>
+                </div>
+                <div>
+                    <span class="pdf-pill">${escapePdfHtml(snapshot.title)}</span>
+                </div>
+            </div>
+            <table class="pdf-table">
+                <thead>${tableHead}</thead>
+                <tbody>${rowsHtml}</tbody>
+            </table>
+            <div class="summary-wrap">
+                ${summaryHtml}
+            </div>
+            ${extraSections ? `<div class="pdf-sections-grid">${extraSections}</div>` : ''}
+        </div>
+    `;
+}
+
+async function downloadCurrentDocumentPDF() {
+    const profile = await fetchProfileSnapshot();
+    const snapshot = getCurrentDocumentSnapshot(profile);
+
+    if (!snapshot.items.length) {
+        showError('Add at least one row before downloading the PDF');
+        return;
+    }
+
+    if (!window.html2pdf) {
+        showError('PDF generator failed to load. Please refresh the page and try again.');
+        return;
+    }
+
+    const container = document.createElement('div');
+    container.innerHTML = buildDocumentPdfHtml(snapshot);
+
+    await window.html2pdf()
+        .set({
+            margin: 10,
+            filename: `${snapshot.documentNumber || 'document'}.pdf`,
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        })
+        .from(container)
+        .save();
 }
 
 /* ============================================================
@@ -1758,6 +2189,7 @@ document.addEventListener('click', (e) => {
 
     if (action === 'add-item')         addItemRow();
     if (action === 'save-document')    saveDocument();
+    if (action === 'download-document-pdf') downloadCurrentDocumentPDF();
     if (action === 'add-sub-line')     addSubLineToRow(actionEl.closest('tr'));
     if (action === 'remove-sub-line') {
         actionEl.closest('.sub-line-row')?.remove();

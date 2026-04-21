@@ -9,14 +9,6 @@ ApiAuth::requireLogin();
 
 try {
     $type = $_GET['type'] ?? 'invoice';
-    
-    $table_name = match($type) {
-        'quotation' => 'quotations',
-        'bill-no-gst' => 'bills',
-        'invoice' => 'invoices',
-        'challan' => 'challans',
-        default => 'invoices'
-    };
 
     // Get prefix based on type
     $prefix = match($type) {
@@ -48,12 +40,15 @@ try {
         // Build the pattern for this financial year: INV-25-%
         $year_prefix = $prefix . '-' . $year_suffix;
         
-        // Find the highest number for this financial year
-        $sql = "SELECT MAX(CAST(SUBSTRING(invoice_number, LENGTH('{$year_prefix}') + 2) AS UNSIGNED)) AS last_number 
-                FROM {$table_name} 
-                WHERE invoice_number LIKE '{$year_prefix}-%'";
-        
-        $result = $conn->query($sql);
+        $stmt = $conn->prepare("
+            SELECT MAX(CAST(SUBSTRING(invoice_number, LENGTH(?) + 2) AS UNSIGNED)) AS last_number
+            FROM invoices
+            WHERE document_type = ?
+              AND invoice_number LIKE CONCAT(?, '-%')
+        ");
+        $stmt->bind_param('sss', $year_prefix, $type, $year_prefix);
+        $stmt->execute();
+        $result = $stmt->get_result();
         $next_number = 1;
         
         if ($result) {
@@ -61,17 +56,21 @@ try {
             $last_number = (int) ($row['last_number'] ?? 0);
             $next_number = $last_number + 1;
         }
+        $stmt->close();
         
         // Format: INV-25-0001
         $formatted_number = $year_prefix . '-' . str_pad((string)$next_number, 4, '0', STR_PAD_LEFT);
         
     } else {
-        // For other document types, use simple sequential numbering
-        $sql = "SELECT MAX(CAST(SUBSTRING(invoice_number, LENGTH('{$prefix}') + 2) AS UNSIGNED)) AS last_number 
-                FROM {$table_name} 
-                WHERE invoice_number LIKE '{$prefix}-%'";
-        
-        $result = $conn->query($sql);
+        $stmt = $conn->prepare("
+            SELECT MAX(CAST(SUBSTRING(invoice_number, LENGTH(?) + 2) AS UNSIGNED)) AS last_number
+            FROM invoices
+            WHERE document_type = ?
+              AND invoice_number LIKE CONCAT(?, '-%')
+        ");
+        $stmt->bind_param('sss', $prefix, $type, $prefix);
+        $stmt->execute();
+        $result = $stmt->get_result();
         $next_number = 1;
         
         if ($result) {
@@ -79,6 +78,7 @@ try {
             $last_number = (int) ($row['last_number'] ?? 0);
             $next_number = $last_number + 1;
         }
+        $stmt->close();
         
         // Format: QT-0001, BL-0001, CH-0001
         $formatted_number = $prefix . '-' . str_pad((string)$next_number, 4, '0', STR_PAD_LEFT);

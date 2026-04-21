@@ -170,19 +170,18 @@ try {
 
     $documentsStmt = $pdo->prepare("
         SELECT
-            d.id,
-            d.document_number,
-            d.created_at,
-            CAST(d.grand_total AS DECIMAL(12,2)) AS grand_total,
-            CAST(COALESCE(SUM(p.amount), 0) AS DECIMAL(12,2)) AS paid_amount,
-            CAST(d.grand_total - COALESCE(SUM(p.amount), 0) AS DECIMAL(12,2)) AS pending_amount
-        FROM documents d
-        LEFT JOIN payments p ON p.document_id = d.id
-        WHERE d.client_id = :client_id
-          AND DATE(d.created_at) BETWEEN :from_date AND :to_date
-        GROUP BY d.id, d.document_number, d.created_at, d.grand_total
-        HAVING pending_amount > 0
-        ORDER BY DATE(d.created_at) ASC, d.id ASC
+            i.id,
+            i.invoice_number AS document_number,
+            i.invoice_date AS document_date,
+            CAST(i.grand_total AS DECIMAL(12,2)) AS grand_total,
+            CAST(COALESCE(i.amount_received, 0) AS DECIMAL(12,2)) AS paid_amount,
+            CAST(GREATEST(i.grand_total - COALESCE(i.amount_received, 0), 0) AS DECIMAL(12,2)) AS pending_amount
+        FROM invoices i
+        WHERE i.client_id = :client_id
+          AND DATE(i.invoice_date) BETWEEN :from_date AND :to_date
+          AND LOWER(COALESCE(i.status, '')) IN ('unpaid', 'partially paid')
+          AND GREATEST(i.grand_total - COALESCE(i.amount_received, 0), 0) > 0
+        ORDER BY DATE(i.invoice_date) ASC, i.id ASC
     ");
 
     $documentsStmt->execute([
@@ -220,7 +219,7 @@ try {
             $rowsHtml .= '
                 <tr>
                     <td>' . htmlspecialchars((string) $document['document_number'], ENT_QUOTES, 'UTF-8') . '</td>
-                    <td>' . htmlspecialchars(statement_display_date(substr((string) $document['created_at'], 0, 10)), ENT_QUOTES, 'UTF-8') . '</td>
+                    <td>' . htmlspecialchars(statement_display_date((string) $document['document_date']), ENT_QUOTES, 'UTF-8') . '</td>
                     <td class="amount">' . htmlspecialchars(statement_currency($document['grand_total']), ENT_QUOTES, 'UTF-8') . '</td>
                     <td class="amount">' . htmlspecialchars(statement_currency($document['paid_amount']), ENT_QUOTES, 'UTF-8') . '</td>
                     <td class="amount pending">' . htmlspecialchars(statement_currency($document['pending_amount']), ENT_QUOTES, 'UTF-8') . '</td>
