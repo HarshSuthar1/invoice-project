@@ -1,3 +1,23 @@
 {
-    "transactions": []
+    "transactions": [
+        {
+            "id": "led_a068bbf061e3fc4d",
+            "client_id": 26,
+            "type": "payment",
+            "amount": 64900,
+            "transaction_date": "2026-04-21",
+            "payment_mode": "Cheque",
+            "reference_no": "",
+            "notes": "",
+            "allocations": [
+                {
+                    "invoice_id": 20,
+                    "invoice_number": "INV-25-0020",
+                    "amount": 64900
+                }
+            ],
+            "created_at": "2026-04-21T11:16:46+05:30",
+            "updated_at": "2026-04-21T11:16:46+05:30"
+        }
+    ]
 }

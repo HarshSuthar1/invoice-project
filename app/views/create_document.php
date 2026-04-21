@@ -11,6 +11,18 @@ $showTax = !in_array($docType, ['bill-no-gst', 'quotation', 'challan']);
 $isChallan = $docType === 'challan';
 $isInvoice = $docType === 'invoice';
 $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
+$importSources = [];
+
+if ($isInvoice) {
+    $importSources = [
+        'quotation' => 'Import from Quotation',
+        'bill-no-gst' => 'Import from Bill (No GST)'
+    ];
+} elseif ($docType === 'bill-no-gst') {
+    $importSources = [
+        'quotation' => 'Import from Quotation'
+    ];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -57,8 +69,8 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
         }
 
         .import-section {
-            background: #f9fafb;
-            border: 1px solid #e5e7eb;
+            background: var(--surface-subtle);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 24px;
@@ -67,7 +79,7 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
         .import-section h4 {
             font-size: 16px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-heading);
             margin-bottom: 12px;
         }
 
@@ -91,7 +103,7 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
             margin-bottom: 10px;
             font-size: 14px;
             font-weight: 600;
-            color: #374151;
+            color: var(--text-heading);
         }
 
         .issuer-options {
@@ -99,7 +111,8 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
             gap: 8px;
             flex-wrap: wrap;
             padding: 6px;
-            background: #e5e7eb;
+            background: var(--surface-muted);
+            border: 1px solid var(--border-color);
             border-radius: 999px;
         }
 
@@ -109,8 +122,8 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
             gap: 8px;
             padding: 10px 18px;
             border-radius: 999px;
-            background: #f3f4f6;
-            color: #4b5563;
+            background: var(--surface-subtle);
+            color: var(--text-primary);
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -136,9 +149,9 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
             margin-bottom: 20px;
             padding: 12px 16px;
             border-radius: 8px;
-            background: #fef3c7;
+            background: var(--surface-muted);
             border: 1px solid #f59e0b;
-            color: #92400e;
+            color: var(--text-heading);
             font-size: 14px;
             font-weight: 500;
         }
@@ -165,21 +178,21 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
         .image-paste-box {
             width: 100px;
             height: 100px;
-            border: 2px dashed #cbd5e1;
+            border: 2px dashed var(--border-color);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-            background: #f9fafb;
+            background: var(--surface-subtle);
             position: relative;
             overflow: hidden;
         }
 
         .image-paste-box:hover {
             border-color: #3b82f6;
-            background: #f0f9ff;
+            background: var(--surface-muted);
         }
 
         .image-paste-box.has-image {
@@ -189,7 +202,7 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
         }
 
         .paste-icon {
-            color: #9ca3af;
+            color: var(--text-muted);
             font-size: 12px;
             text-align: center;
             padding: 8px;
@@ -245,7 +258,7 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
 
         /* Help text */
         .image-help {
-            background: #eff6ff;
+            background: var(--surface-muted);
             border-left: 4px solid #3b82f6;
             padding: 12px 16px;
             margin-bottom: 20px;
@@ -255,7 +268,7 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
         .image-help p {
             margin: 0;
             font-size: 14px;
-            color: #1e40af;
+            color: var(--text-primary);
         }
 
         .image-help strong {
@@ -282,7 +295,7 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
             gap: 12px;
             margin: 16px 0 8px 0;
             padding: 14px 20px;
-            background: #fffbeb;
+            background: var(--surface-muted);
             border: 1px dashed #f59e0b;
             border-radius: 8px;
         }
@@ -290,16 +303,16 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
         .discount-section label {
             font-size: 14px;
             font-weight: 600;
-            color: #92400e;
+            color: var(--text-heading);
             white-space: nowrap;
         }
 
         .discount-type-toggle {
             display: flex;
-            border: 1px solid #d1d5db;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             overflow: hidden;
-            background: white;
+            background: var(--surface-color);
         }
 
         .discount-type-btn {
@@ -307,8 +320,8 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
             font-size: 13px;
             font-weight: 600;
             border: none;
-            background: white;
-            color: #6b7280;
+            background: var(--surface-color);
+            color: var(--text-muted);
             cursor: pointer;
             transition: all 150ms ease;
         }
@@ -319,7 +332,7 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
         }
 
         .discount-type-btn:first-child {
-            border-right: 1px solid #d1d5db;
+            border-right: 1px solid var(--border-color);
         }
 
         .discount-input-wrap {
@@ -333,7 +346,7 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
             left: 10px;
             font-size: 14px;
             font-weight: 600;
-            color: #6b7280;
+            color: var(--text-muted);
             pointer-events: none;
         }
 
@@ -346,13 +359,14 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
         #discountValue {
             width: 110px;
             padding: 7px 12px 7px 24px;
-            border: 1px solid #d1d5db;
+            border: 1px solid var(--border-color);
             border-radius: 6px;
             font-size: 14px;
             font-weight: 600;
             outline: none;
             transition: border-color 200ms ease;
-            color: #1f2937;
+            color: var(--text-heading);
+            background: var(--surface-color);
         }
 
         #discountValue.percent-mode {
@@ -540,6 +554,7 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
             color: var(--text-primary);
             font-size: 13px;
             box-sizing: border-box;
+            color-scheme: inherit;
         }
 
         .grouped-document-table td .hsn:focus,
@@ -600,6 +615,30 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
             box-sizing: border-box;
         }
 
+        html[data-theme="dark"] .issuer-options {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.09);
+        }
+
+        html[data-theme="dark"] .issuer-option {
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text-primary);
+        }
+
+        html[data-theme="dark"] .import-section,
+        html[data-theme="dark"] .discount-section {
+            box-shadow: var(--card-shadow);
+        }
+
+        html[data-theme="dark"] .discount-type-btn:not(.active):hover,
+        html[data-theme="dark"] .issuer-option:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        html[data-theme="dark"] .image-paste-box {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
         @media (max-width: 900px) {
             .sub-line-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -655,17 +694,16 @@ $showImageColumn = in_array($docType, ['quotation', 'bill-no-gst']);
                     Personal mode: No GST, no company details on document
                 </div>
 
-                <!-- Import Section (Only for Invoice) -->
-                <?php if ($isInvoice): ?>
+                <!-- Import Section -->
+                <?php if (!empty($importSources)): ?>
                 <div class="import-section">
                     <h4>💡 Import Data From Existing Document</h4>
                     <div class="import-buttons">
-                        <button type="button" class="btn btn-view" data-action="import-from" data-import-type="quotation">
-                            Import from Quotation
+                        <?php foreach ($importSources as $importType => $importLabel): ?>
+                        <button type="button" class="btn btn-view" data-action="import-from" data-import-type="<?php echo htmlspecialchars($importType); ?>">
+                            <?php echo htmlspecialchars($importLabel); ?>
                         </button>
-                        <button type="button" class="btn btn-view" data-action="import-from" data-import-type="bill-no-gst">
-                            Import from Bill (No GST)
-                        </button>
+                        <?php endforeach; ?>
                     </div>
                 </div>
                 <?php endif; ?>
@@ -876,6 +914,13 @@ const canUseTax = !['bill-no-gst', 'quotation', 'challan'].includes(currentDocTy
 let showTax = canUseTax;
 const showImageColumn = ['quotation', 'bill-no-gst'].includes(currentDocType);
 let issuerType = 'company';
+let clientsReadyPromise = null;
+const importTypeLabels = {
+    quotation: 'quotation',
+    'bill-no-gst': 'bill (no GST)',
+    invoice: 'invoice',
+    challan: 'challan'
+};
 
 /* ============================================================
    DISCOUNT STATE
@@ -975,6 +1020,34 @@ function setupIssuerToggle() {
     });
 
     syncIssuerType(qs('.issuer-option input[name="issuer_type"]:checked')?.value || 'company');
+}
+
+async function ensureClientsLoaded() {
+    if (!clientsReadyPromise) {
+        clientsReadyPromise = (async () => {
+            const clients = await fetchClients();
+            const select = qs('#clientSelect');
+            if (!select) return clients;
+
+            const selectedValue = select.value;
+            select.innerHTML = `<option value="">Select Client</option>`;
+
+            clients.forEach((client) => {
+                const opt = document.createElement('option');
+                opt.value = client.id;
+                opt.textContent = client.company_name || `Client #${client.id}`;
+                select.appendChild(opt);
+            });
+
+            if (selectedValue) select.value = selectedValue;
+            return clients;
+        })().catch((err) => {
+            clientsReadyPromise = null;
+            throw err;
+        });
+    }
+
+    return clientsReadyPromise;
 }
 
 /* ============================================================
@@ -1325,6 +1398,22 @@ function setupItemImagePaste(row) {
     }
 }
 
+function hydrateItemImage(row, imageData) {
+    if (!showImageColumn || !imageData) return;
+
+    const pasteBox = row.querySelector('.image-paste-box');
+    const preview = row.querySelector('.item-image-preview');
+    const pasteIcon = row.querySelector('.paste-icon');
+
+    if (!pasteBox || !preview || !pasteIcon) return;
+
+    preview.src = imageData;
+    preview.classList.add('show');
+    pasteIcon.style.display = 'none';
+    pasteBox.classList.add('has-image');
+    pasteBox.dataset.imageData = imageData;
+}
+
 /* ============================================================
    ADD ITEM ROW
    ============================================================ */
@@ -1389,7 +1478,10 @@ function addItemRow(data = null) {
 
     tbody.appendChild(row);
     if (!isChallan) hydrateGroupedRow(row, data || {});
-    if (showImageColumn) setupItemImagePaste(row);
+    if (showImageColumn) {
+        setupItemImagePaste(row);
+        hydrateItemImage(row, data?.image || '');
+    }
     updateTaxVisibility();
     calculateTotals();
 }
@@ -1399,13 +1491,14 @@ function addItemRow(data = null) {
    ============================================================ */
 async function openImportModal(importType) {
     try {
-        const res = await apiFetch(`/api/documents/get_documents.php?type=${importType}`);
+        const res = await apiFetch(`/api/documents/get_documents.php?type=${encodeURIComponent(importType)}`);
         const documents = res.documents || [];
         const tbody = qs('#importTableBody');
         tbody.innerHTML = '';
+        const importLabel = importTypeLabels[importType] || 'document';
 
         if (!documents.length) {
-            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:#6b7280;">No ${importType} documents found</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted);">No ${importLabel} documents found</td></tr>`;
         } else {
             documents.forEach(doc => {
                 const tr = document.createElement('tr');
@@ -1428,24 +1521,29 @@ async function openImportModal(importType) {
 
 async function importDocument(docId) {
     try {
-        const res = await apiFetch(`/api/documents/get_document_details.php?id=${docId}`);
+        const [res] = await Promise.all([
+            apiFetch(`/api/documents/get_document_details.php?id=${encodeURIComponent(docId)}`),
+            ensureClientsLoaded()
+        ]);
         const doc  = res.document;
         const items = res.items || [];
 
-        qs('#clientSelect').value = doc.client_id;
+        const clientSelect = qs('#clientSelect');
+        if (clientSelect) clientSelect.value = String(doc.client_id ?? '');
         qs('#documentItemsBody').innerHTML = '';
         itemIndex = 0;
 
         items.forEach(item => {
             addItemRow({
-                description: item.description,
+                description: item.description || '',
                 description_extra: item.description_extra || '',
-                hsn:         item.hsn_code,
-                quantity:    item.quantity,
+                hsn:         item.hsn_code || item.hsn || '',
+                quantity:    item.quantity ?? 1,
                 unit:        item.unit || 'Nos',
-                price:       item.unit_price || item.price,
-                tax:         canUseTax ? (item.tax_rate || 0) : 0,
-                sub_items:   item.sub_items || []
+                price:       item.unit_price ?? item.price ?? 0,
+                tax:         canUseTax ? Number(item.tax_rate ?? item.tax ?? 0) : 0,
+                sub_items:   Array.isArray(item.sub_items) ? item.sub_items : [],
+                image:       item.image_url || item.item_image || item.image || ''
             });
         });
 
@@ -1623,15 +1721,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load dropdown data
     (async () => {
         try {
-            const clients = await fetchClients();
-            const select  = qs('#clientSelect');
-            select.innerHTML = `<option value="">Select Client</option>`;
-            clients.forEach(c => {
-                const opt = document.createElement('option');
-                opt.value       = c.id;
-                opt.textContent = c.company_name || `Client #${c.id}`;
-                select.appendChild(opt);
-            });
+            await ensureClientsLoaded();
         } catch (err) {
             console.error(err);
             showError('Failed to load clients');

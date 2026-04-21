@@ -49,6 +49,14 @@
     color: var(--text-muted);
 }
 
+.form-group label,
+.toolbar-field label,
+.allocation-header label,
+.issuer-toggle-group > label,
+.discount-section label {
+    color: var(--text-heading);
+}
+
 .client-card,
 .invoice-card,
 .settings-card,
@@ -191,7 +199,11 @@ table tbody tr:hover {
 }
 
 html[data-theme="dark"] #documentForm select option,
-html[data-theme="dark"] #documentForm select optgroup {
+html[data-theme="dark"] #documentForm select optgroup,
+html[data-theme="dark"] .modal-form select option,
+html[data-theme="dark"] .modal-form select optgroup,
+html[data-theme="dark"] .toolbar-field select option,
+html[data-theme="dark"] .toolbar-field select optgroup {
     background-color: var(--surface-color);
     color: var(--text-primary);
 }
