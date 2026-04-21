@@ -59,15 +59,8 @@ switch ($page) {
     case 'profile':
         require __DIR__ . '/../views/profile.php';
         break;
-<<<<<<< HEAD
 
     default:
         http_response_code(404);
         echo "Page not found";
-=======
-
-    default:
-        http_response_code(404);
-        echo "Page not found";
->>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
 } 

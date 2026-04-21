@@ -369,28 +369,16 @@ CREATE TABLE `quotation_items` (
 -- Triggers `quotation_items`
 --
 DELIMITER $$
-<<<<<<< HEAD
 CREATE TRIGGER `trg_quotation_item_insert` BEFORE INSERT ON `quotation_items` FOR EACH ROW BEGIN
   SET NEW.tax_amount = (NEW.quantity * NEW.unit_price) * (NEW.tax_rate / 100);
   SET NEW.line_total = (NEW.quantity * NEW.unit_price) + NEW.tax_amount;
-=======
-CREATE TRIGGER `trg_quotation_item_insert` BEFORE INSERT ON `quotation_items` FOR EACH ROW BEGIN
-  SET NEW.tax_amount = (NEW.quantity * NEW.unit_price) * (NEW.tax_rate / 100);
-  SET NEW.line_total = (NEW.quantity * NEW.unit_price) + NEW.tax_amount;
->>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
 END
 $$
 DELIMITER ;
 DELIMITER $$
-<<<<<<< HEAD
 CREATE TRIGGER `trg_quotation_item_update` BEFORE UPDATE ON `quotation_items` FOR EACH ROW BEGIN
   SET NEW.tax_amount = (NEW.quantity * NEW.unit_price) * (NEW.tax_rate / 100);
   SET NEW.line_total = (NEW.quantity * NEW.unit_price) + NEW.tax_amount;
-=======
-CREATE TRIGGER `trg_quotation_item_update` BEFORE UPDATE ON `quotation_items` FOR EACH ROW BEGIN
-  SET NEW.tax_amount = (NEW.quantity * NEW.unit_price) * (NEW.tax_rate / 100);
-  SET NEW.line_total = (NEW.quantity * NEW.unit_price) + NEW.tax_amount;
->>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
 END
 $$
 DELIMITER ;

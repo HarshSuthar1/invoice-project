@@ -6,6 +6,7 @@ import { fetchClients, saveClient, deleteClient } from '../core/data/clients.js'
 let clientsData = {};
 let isEditMode = false;
 let currentEditId = null;
+const clientForm = qs('#clientForm');
 
 /* ------------------------
    Load clients
@@ -48,98 +49,91 @@ function addRow(client) {
     <td>${client.email || ''}<br><small>${client.phone || ''}</small></td>
     <td>${client.gst_number || ''}</td>
     <td>
-      <button class="btn btn-view" data-action="ledger" data-id="${client.id}">Ledger</button>
+      <button class="btn btn-ledger" data-action="ledger" data-id="${client.id}">Ledger</button>
       <button class="btn btn-view" data-action="view" data-id="${client.id}">View</button>
       <button class="btn btn-edit" data-action="edit" data-id="${client.id}">Edit</button>
       <button class="btn btn-delete" data-action="delete" data-id="${client.id}">Delete</button>
     </td>
   `;
-<<<<<<< HEAD
   qs('#clientTableBody').appendChild(tr);
+}
+
+function resetClientEditor() {
+  isEditMode = false;
+  currentEditId = null;
+  clientForm?.reset();
+  qs('#modalTitle').textContent = 'Add New Client';
+}
+
+function openClientEditor(id = null) {
+  if (id) {
+    fillForm(id);
+    isEditMode = true;
+    currentEditId = id;
+    qs('#modalTitle').textContent = 'Edit Client';
+  } else {
+    resetClientEditor();
+  }
+
+  openModal('clientModal');
+}
+
+function submitClientForm() {
+  clientForm?.requestSubmit
+    ? clientForm.requestSubmit()
+    : clientForm?.dispatchEvent(new Event('submit', { cancelable: true }));
 }
 
 /* ------------------------
    Actions
 ------------------------ */
 document.addEventListener('click', (e) => {
-  const { action, id, target } = e.target.dataset;
+  const actionEl = e.target.closest('[data-action]');
+  const { action, id, target } = actionEl?.dataset || {};
   if (!action) return;
 
   if (action === 'add-client') {
-    isEditMode = false;
-    currentEditId = null;
-    qs('#clientForm').reset();
-    qs('#modalTitle').textContent = 'Add New Client';
-    openModal('clientModal');
+    openClientEditor();
+    return;
   }
 
   if (action === 'edit') {
-    fillForm(id);
-    isEditMode = true;
-    currentEditId = id;
-    qs('#modalTitle').textContent = 'Edit Client';
-    openModal('clientModal');
+    openClientEditor(id);
+    return;
   }
 
-=======
-  qs('#clientTableBody').appendChild(tr);
-}
-
-/* ------------------------
-   Actions
------------------------- */
-document.addEventListener('click', (e) => {
-  const { action, id, target } = e.target.dataset;
-  if (!action) return;
-
-  if (action === 'add-client') {
-    isEditMode = false;
-    currentEditId = null;
-    qs('#clientForm').reset();
-    qs('#modalTitle').textContent = 'Add New Client';
-    openModal('clientModal');
-  }
-
-  if (action === 'edit') {
-    fillForm(id);
-    isEditMode = true;
-    currentEditId = id;
-    qs('#modalTitle').textContent = 'Edit Client';
-    openModal('clientModal');
-  }
-
->>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
   if (action === 'view') {
     populateView(id);
     openModal('viewClientModal');
+    return;
   }
 
   if (action === 'ledger') {
     window.location.href = `/Business%20project/public/index.php?page=ledger&client_id=${encodeURIComponent(id)}`;
+    return;
   }
 
-  if (action === 'delete') handleDelete(id);
-<<<<<<< HEAD
+  if (action === 'delete') {
+    handleDelete(id);
+    return;
+  }
 
   if (action === 'edit-client') {
     const viewId = qs('#viewClientModal')?.dataset.viewId;
     if (viewId) {
-      fillForm(viewId);
-      isEditMode = true;
-      currentEditId = viewId;
       closeModal('viewClientModal');
-      openModal('clientModal');
+      openClientEditor(viewId);
     }
+    return;
   }
 
-  if (action === 'close-modal') {
-    if (target) {
-      closeModal(target);
-    }
+  if (action === 'close-modal' && target) {
+    closeModal(target);
+    return;
   }
 
   if (action === 'submit-client') {
-    qs('#clientForm')?.requestSubmit ? qs('#clientForm').requestSubmit() : qs('#clientForm')?.dispatchEvent(new Event('submit', {cancelable: true}));
+    submitClientForm();
   }
 });
 
@@ -156,7 +150,7 @@ const filterClients = () => {
 /* ------------------------
    Save client - FIXED
 ------------------------ */
-qs('#clientForm').addEventListener('submit', async (e) => {
+clientForm?.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const email = qs('#email').value.trim();
@@ -180,12 +174,11 @@ qs('#clientForm').addEventListener('submit', async (e) => {
     formData.append('id', currentEditId);
   }
 
-  const form = qs('#clientForm');
   const saveButtons = document.querySelectorAll('[data-action="submit-client"]');
   
   try {
     // UI: show loading
-    form?.classList.add('loading');
+    clientForm?.classList.add('loading');
     saveButtons.forEach(b => b.disabled = true);
 
     await saveClient(formData);
@@ -194,15 +187,13 @@ qs('#clientForm').addEventListener('submit', async (e) => {
     await loadClients();
     
     // Reset form and mode
-    form.reset();
-    isEditMode = false;
-    currentEditId = null;
+    resetClientEditor();
     
   } catch (err) {
     console.error(err);
     showError(err.message || 'Failed to save client');
   } finally {
-    form?.classList.remove('loading');
+    clientForm?.classList.remove('loading');
     saveButtons.forEach(b => b.disabled = false);
   }
 });
@@ -242,128 +233,4 @@ async function handleDelete(id) {
     console.error(err);
     showError(err.message || 'Failed to delete client');
   }
-=======
-
-  if (action === 'edit-client') {
-    const viewId = qs('#viewClientModal')?.dataset.viewId;
-    if (viewId) {
-      fillForm(viewId);
-      isEditMode = true;
-      currentEditId = viewId;
-      closeModal('viewClientModal');
-      openModal('clientModal');
-    }
-  }
-
-  if (action === 'close-modal') {
-    if (target) {
-      closeModal(target);
-    }
-  }
-
-  if (action === 'submit-client') {
-    qs('#clientForm')?.requestSubmit ? qs('#clientForm').requestSubmit() : qs('#clientForm')?.dispatchEvent(new Event('submit', {cancelable: true}));
-  }
-});
-
-// Search / Filter clients
-qs('#searchInput')?.addEventListener('input', () => filterClients());
-
-const filterClients = () => {
-  const term = (qs('#searchInput')?.value || '').toLowerCase();
-  qsa('#clientTableBody tr').forEach(row => {
-    row.style.display = row.textContent.toLowerCase().includes(term) ? '' : 'none';
-  });
-};
-
-/* ------------------------
-   Save client - FIXED
------------------------- */
-qs('#clientForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const email = qs('#email').value.trim();
-  const gst = qs('#gstNumber').value.trim();
-
-  if (!required(qs('#companyName').value)) return showError('Company name required');
-  if (email && !isEmail(email)) return showError('Invalid email');
-  if (gst && !isGST(gst)) return showError('Invalid GST format');
-
-  // Create FormData with correct field names (snake_case for API)
-  const formData = new FormData();
-  formData.append('company_name', qs('#companyName').value.trim());
-  formData.append('contact_person', qs('#contactPerson').value.trim());
-  formData.append('email', email);
-  formData.append('phone', qs('#phone').value.trim());
-  formData.append('gst_number', gst);
-  formData.append('address', qs('#address').value.trim());
-  formData.append('notes', qs('#notes').value.trim());
-
-  if (isEditMode && currentEditId) {
-    formData.append('id', currentEditId);
-  }
-
-  const form = qs('#clientForm');
-  const saveButtons = document.querySelectorAll('[data-action="submit-client"]');
-  
-  try {
-    // UI: show loading
-    form?.classList.add('loading');
-    saveButtons.forEach(b => b.disabled = true);
-
-    await saveClient(formData);
-    closeModal('clientModal');
-    showSuccess(isEditMode ? 'Client updated successfully' : 'Client added successfully');
-    await loadClients();
-    
-    // Reset form and mode
-    form.reset();
-    isEditMode = false;
-    currentEditId = null;
-    
-  } catch (err) {
-    console.error(err);
-    showError(err.message || 'Failed to save client');
-  } finally {
-    form?.classList.remove('loading');
-    saveButtons.forEach(b => b.disabled = false);
-  }
-});
-
-function populateView(id) {
-  const c = clientsData[id];
-  if (!c) return;
-  qs('#viewCompanyName').textContent = c.company_name || '';
-  qs('#viewContactPerson').textContent = c.contact_person || '';
-  qs('#viewEmail').textContent = c.email || '';
-  qs('#viewPhone').textContent = c.phone || '';
-  qs('#viewGstNumber').textContent = c.gst_number || '';
-  qs('#viewAddress').textContent = c.address || '';
-  qs('#viewNotes').textContent = c.notes || '';
-  qs('#viewClientModal').dataset.viewId = id;
-}
-
-function fillForm(id) {
-  const c = clientsData[id];
-  if (!c) return;
-  qs('#companyName').value = c.company_name || '';
-  qs('#contactPerson').value = c.contact_person || '';
-  qs('#email').value = c.email || '';
-  qs('#phone').value = c.phone || '';
-  qs('#gstNumber').value = c.gst_number || '';
-  qs('#address').value = c.address || '';
-  qs('#notes').value = c.notes || '';
-}
-
-async function handleDelete(id) {
-  if (!confirm('Delete this client? This action cannot be undone.')) return;
-  try {
-    await deleteClient(id);
-    showSuccess('Client deleted successfully');
-    loadClients();
-  } catch (err) {
-    console.error(err);
-    showError(err.message || 'Failed to delete client');
-  }
->>>>>>> 4dceb61077f6ee88dd77d4bc76357be632f023af
 }

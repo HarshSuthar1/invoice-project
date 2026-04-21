@@ -134,12 +134,11 @@ Business project/
 │           ├── dashboard.js
 │           ├── clients.js
 │           ├── invoice.js
-│           ├── manage_invoice.js
+│           ├── manage_documents_cards.js
 │           ├── profile.js
 │           ├── reports.js
 │           ├── login.js
 │           ├── signin.js
-│           └── create-document.js  ← NEW
 ├── includes/
 │   ├── config.php
 │   └── sidebar.php
@@ -248,7 +247,6 @@ Business project/
 ### 2. New Files Created
 - `app/views/create-hub.php`
 - `app/views/create-document.php`
-- `assets/js/pages/create-document.js`
 - `assets/css/pages/create-hub.css`
 - `assets/css/pages/create-document.css`
 

@@ -3,13 +3,58 @@ manage_documents_cards.js
 Card-based document management with filtering, viewing, editing, and deleting
 */
 
-import { qs, qsa } from '../core/dom.js';
+import { qs } from '../core/dom.js';
 import { formatCurrency } from '../core/utils.js';
-import { fetchInvoices, fetchInvoice, updateInvoice, clearInvoicesCache } from '../core/data/invoice.js';
-import { showError, showSuccess } from '../core/ui.js';
+import { fetchDocument, fetchDocuments, clearDocumentsCache } from '../core/data/documents.js';
+import { updateInvoice } from '../core/data/invoice.js';
+import { openModal, closeModal, showError, showSuccess } from '../core/ui.js';
 
 let documentsData = [];
 let currentViewingDocId = null;
+const CREATE_HUB_URL = '/Business%20project/public/index.php?page=create-hub';
+
+const getDocumentDate = (doc) => doc.invoice_date || doc.document_date || doc.created_at || '';
+
+const normalizeItemAmounts = (item) => {
+  const unitPrice = Number(item.unit_price ?? item.price ?? 0);
+  const quantity = Number(item.quantity || 0);
+  const lineTotal = Number(item.line_total ?? item.total ?? quantity * unitPrice);
+  const taxAmount = Number(item.tax_amount ?? item.tax ?? lineTotal - (quantity * unitPrice));
+
+  return { quantity, unitPrice, lineTotal, taxAmount };
+};
+
+const matchesDateFilter = (doc, filterValue) => {
+  if (!filterValue) return true;
+
+  const rawDate = getDocumentDate(doc);
+  if (!rawDate) return false;
+
+  const docDate = new Date(rawDate);
+  if (Number.isNaN(docDate.getTime())) return false;
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (filterValue === 'today') {
+    return docDate >= startOfToday;
+  }
+
+  if (filterValue === 'week') {
+    const startOfWeek = new Date(startOfToday);
+    const day = startOfWeek.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    startOfWeek.setDate(startOfWeek.getDate() - diff);
+    return docDate >= startOfWeek;
+  }
+
+  if (filterValue === 'month') {
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    return docDate >= startOfMonth;
+  }
+
+  return true;
+};
 
 /* -----------------------------
    Load all documents
@@ -20,15 +65,15 @@ const loadDocuments = async () => {
   try {
     container.innerHTML = '<div class="loading-state">📄 Loading documents...</div>';
     
-    const invoices = await fetchInvoices();
-    documentsData = invoices;
+    const documents = await fetchDocuments();
+    documentsData = documents;
 
-    if (!invoices.length) {
+    if (!documents.length) {
       showEmptyState(container);
       return;
     }
 
-    renderDocumentCards(invoices);
+    renderDocumentCards(documents);
 
   } catch (err) {
     console.error('[manage_documents_cards.js] Error:', err);
@@ -100,7 +145,7 @@ const createDocumentCard = (doc) => {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
-        <span>${formatDate(doc.created_at)}</span>
+        <span>${formatDate(getDocumentDate(doc))}</span>
       </div>
 
       <div class="status-amount-row">
@@ -132,7 +177,7 @@ const getDocumentType = (invoiceNumber) => {
   if (!invoiceNumber) return 'unknown';
   
   if (invoiceNumber.startsWith('QT-')) return 'quotation';
-  if (invoiceNumber.startsWith('BL-')) return 'bill';
+  if (invoiceNumber.startsWith('BL-')) return 'bill-no-gst';
   if (invoiceNumber.startsWith('CH-')) return 'challan';
   if (invoiceNumber.startsWith('INV-')) return 'invoice';
   
@@ -146,7 +191,7 @@ const getTypeBadge = (type) => {
   const badges = {
     'quotation': { text: 'Quotation', class: 'type-quotation' },
     'invoice': { text: 'Invoice (GST)', class: 'type-invoice' },
-    'bill': { text: 'Bill (No GST)', class: 'type-bill' },
+    'bill-no-gst': { text: 'Bill (No GST)', class: 'type-bill' },
     'challan': { text: 'Challan', class: 'type-challan' }
   };
   
@@ -197,7 +242,7 @@ const showEmptyState = (container) => {
     <div class="empty-state">
       <h3>📭 No Documents Found</h3>
       <p>You haven't created any documents yet. Start by creating your first document!</p>
-      <button class="btn btn-view" onclick="window.location.href='/Business%20project/public/index.php?page=create-hub'" 
+      <button class="btn btn-view" data-action="create-document"
               style="margin-top: 16px; padding: 12px 24px;">
         ➕ Create First Document
       </button>
@@ -210,7 +255,7 @@ const showEmptyState = (container) => {
 ------------------------------ */
 const viewDocument = async (id) => {
   try {
-    const { invoice: doc, items } = await fetchInvoice(id);
+    const { document: doc, items } = await fetchDocument(id);
     currentViewingDocId = id;
     const listDoc = documentsData.find(entry => String(entry.id) === String(id));
 
@@ -228,10 +273,7 @@ const viewDocument = async (id) => {
     let tax = 0;
 
     (items || []).forEach(item => {
-      const unitPrice = Number(item.unit_price ?? item.price ?? 0);
-      const quantity = Number(item.quantity || 0);
-      const lineTotal = Number(item.line_total ?? item.total ?? quantity * unitPrice);
-      const taxAmount = Number(item.tax_amount ?? item.tax ?? lineTotal - (quantity * unitPrice));
+      const { unitPrice, quantity, lineTotal, taxAmount } = normalizeItemAmounts(item);
 
       subtotal += quantity * unitPrice;
       tax += taxAmount;
@@ -298,6 +340,7 @@ const deleteDocument = async (id) => {
 
   try {
     await updateInvoice({ delete: true, id });
+    clearDocumentsCache();
     showSuccess('Document deleted successfully');
     
     // Reload documents
@@ -316,7 +359,7 @@ const downloadDocumentPDF = async () => {
   if (!currentViewingDocId) return;
 
   try {
-    const { invoice: doc, items = [] } = await fetchInvoice(currentViewingDocId);
+    const { document: doc, items = [] } = await fetchDocument(currentViewingDocId);
 
     const html = `
       <div style="font-family: Arial, sans-serif; padding: 40px; color: #111827;">
@@ -333,14 +376,17 @@ const downloadDocumentPDF = async () => {
             </tr>
           </thead>
           <tbody>
-            ${items.map(item => `
+            ${items.map(item => {
+              const { quantity, unitPrice, lineTotal } = normalizeItemAmounts(item);
+              return `
               <tr style="border-bottom: 1px solid #f3f4f6;">
                 <td style="padding: 12px;">${escapeHtml(item.description)}</td>
-                <td style="text-align:right; padding: 12px;">${item.quantity}</td>
-                <td style="text-align:right; padding: 12px;">${formatCurrency(item.price)}</td>
-                <td style="text-align:right; padding: 12px;">${formatCurrency(item.total)}</td>
+                <td style="text-align:right; padding: 12px;">${quantity}</td>
+                <td style="text-align:right; padding: 12px;">${formatCurrency(unitPrice)}</td>
+                <td style="text-align:right; padding: 12px;">${formatCurrency(lineTotal)}</td>
               </tr>
-            `).join('')}
+            `;
+            }).join('')}
           </tbody>
         </table>
         
@@ -376,6 +422,7 @@ const filterDocuments = () => {
   const searchTerm = (qs('#searchInput')?.value || '').toLowerCase();
   const typeFilter = (qs('#typeFilter')?.value || '').toLowerCase();
   const statusFilter = (qs('#statusFilter')?.value || '').toLowerCase();
+  const dateFilter = (qs('#dateFilter')?.value || '').toLowerCase();
 
   const filtered = documentsData.filter(doc => {
     const matchesSearch = 
@@ -388,29 +435,10 @@ const filterDocuments = () => {
     const matchesStatus = !statusFilter || 
       (doc.status || '').toLowerCase() === statusFilter;
 
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesType && matchesStatus && matchesDateFilter(doc, dateFilter);
   });
 
   renderDocumentCards(filtered);
-};
-
-/* -----------------------------
-   Modal helpers
------------------------------- */
-const openModal = (id) => {
-  const modal = qs(`#${id}`);
-  if (modal) {
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
-};
-
-const closeModal = (id) => {
-  const modal = qs(`#${id}`);
-  if (modal) {
-    modal.classList.remove('active');
-    document.body.style.overflow = '';
-  }
 };
 
 /* -----------------------------
@@ -425,6 +453,10 @@ document.addEventListener('click', (e) => {
   if (!action) return;
 
   switch (action) {
+    case 'create-document':
+      window.location.href = CREATE_HUB_URL;
+      break;
+
     case 'view-document':
       viewDocument(id);
       break;
@@ -459,23 +491,6 @@ qs('#searchInput')?.addEventListener('input', filterDocuments);
 qs('#typeFilter')?.addEventListener('change', filterDocuments);
 qs('#statusFilter')?.addEventListener('change', filterDocuments);
 qs('#dateFilter')?.addEventListener('change', filterDocuments);
-
-// Close modal on ESC key
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    const activeModals = qsa('.modal-overlay.active');
-    activeModals.forEach(modal => {
-      closeModal(modal.id);
-    });
-  }
-});
-
-// Close modal when clicking outside
-document.addEventListener('click', (e) => {
-  if (e.target.classList.contains('modal-overlay') && e.target.classList.contains('active')) {
-    closeModal(e.target.id);
-  }
-});
 
 /* -----------------------------
    Initialize
