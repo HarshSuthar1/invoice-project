@@ -174,12 +174,118 @@ function document_prepare_item_insert(mysqli $conn): array
     ];
 }
 
+function document_prepare_main_values(
+    string $documentType,
+    int $clientId,
+    string $documentNumber,
+    string $documentDate,
+    float $subtotal,
+    float $totalTax,
+    float $discount,
+    float $grandTotal,
+    float $amountReceived,
+    string $status,
+    ?string $issuerType,
+    ?string $documentImage,
+    ?string $notes,
+    ?string $vehicleNumber,
+    ?string $transportMode,
+    ?string $lrNumber,
+    ?string $ewayBillNumber
+): array {
+    try {
+        $dueDate = (new DateTimeImmutable($documentDate))->modify('+30 days')->format('Y-m-d');
+    } catch (Throwable) {
+        $dueDate = $documentDate;
+    }
+
+    return [
+        'invoice_number' => trim($documentNumber),
+        'document_type' => trim($documentType),
+        'client_id' => $clientId,
+        'invoice_date' => $documentDate,
+        'due_date' => $dueDate,
+        'subtotal' => $subtotal,
+        'total_tax' => $totalTax,
+        'discount' => $discount,
+        'grand_total' => $grandTotal,
+        'amount_received' => $amountReceived,
+        'status' => trim($status) ?: 'unpaid',
+        'issuer_type' => $issuerType,
+        'document_image' => $documentImage,
+        'notes' => trim((string) $notes),
+        'vehicle_number' => trim((string) $vehicleNumber),
+        'transport_mode' => trim((string) $transportMode),
+        'lr_number' => trim((string) $lrNumber),
+        'eway_bill_number' => trim((string) $ewayBillNumber),
+    ];
+}
+
+function document_filter_available_main_values(mysqli $conn, array $values): array
+{
+    $available = array_flip(document_table_columns($conn, 'invoices'));
+    $filtered = [];
+
+    foreach ($values as $column => $value) {
+        if (!isset($available[$column])) {
+            continue;
+        }
+
+        $filtered[$column] = $value;
+    }
+
+    return $filtered;
+}
+
+function document_insert_main_record(mysqli $conn, array $values): int
+{
+    if ($values === []) {
+        throw new RuntimeException('No invoice columns available for insert');
+    }
+
+    $columns = array_keys($values);
+    $placeholders = implode(', ', array_fill(0, count($columns), '?'));
+    $sql = 'INSERT INTO invoices (' . implode(', ', $columns) . ') VALUES (' . $placeholders . ')';
+    $stmt = $conn->prepare($sql);
+
+    document_bind_dynamic_params($stmt, array_values($values));
+    $stmt->execute();
+
+    return (int) $conn->insert_id;
+}
+
+function document_update_main_record(mysqli $conn, int $documentId, array $values): void
+{
+    if ($values === []) {
+        throw new RuntimeException('No invoice columns available for update');
+    }
+
+    $assignments = [];
+    foreach (array_keys($values) as $column) {
+        $assignments[] = $column . ' = ?';
+    }
+
+    $available = array_flip(document_table_columns($conn, 'invoices'));
+    if (isset($available['updated_at'])) {
+        $assignments[] = 'updated_at = NOW()';
+    }
+
+    $sql = 'UPDATE invoices SET ' . implode(', ', $assignments) . ' WHERE id = ?';
+    $stmt = $conn->prepare($sql);
+
+    $bindValues = array_values($values);
+    $bindValues[] = $documentId;
+    document_bind_dynamic_params($stmt, $bindValues);
+    $stmt->execute();
+}
+
 try {
     if (empty($_POST['client_id']) || empty($_POST['items']) || empty($_POST['document_type'])) {
         ApiResponse::error('Invalid document data', 422);
     }
 
     $client_id        = (int) $_POST['client_id'];
+    $edit_id          = (int) ($_POST['edit_id'] ?? $_POST['document_id'] ?? $_POST['id'] ?? 0);
     $document_type    = $_POST['document_type']; // quotation, bill-no-gst, invoice, challan
     $issuer_type      = $_POST['issuer_type'] ?? 'company';
     $document_number  = $_POST['document_number'];
@@ -188,9 +294,11 @@ try {
     $grand_total      = (float) $_POST['grand_total'];
     $subtotal         = (float) ($_POST['subtotal'] ?? 0);
     $total_tax        = (float) ($_POST['total_tax'] ?? 0);
+    $discount         = (float) ($_POST['discount'] ?? 0);
     $amount_received  = (float) ($_POST['amount_received'] ?? 0);
     $items            = json_decode($_POST['items'], true);
-    
+    $notes            = $_POST['notes'] ?? '';
+
     // Handle pasted image (base64 encoded) - only for quotations and bills
     $document_image   = null;
     if (in_array($document_type, ['quotation', 'bill-no-gst']) && !empty($_POST['document_image'])) {
@@ -199,125 +307,57 @@ try {
 
     // Challan-specific fields
     $vehicle_number   = $_POST['vehicle_number'] ?? null;
-    $driver_name      = $_POST['driver_name'] ?? null;
-    $destination      = $_POST['destination'] ?? null;
+    $transport_mode   = $_POST['transport_mode'] ?? null;
+    $lr_number        = $_POST['lr_number'] ?? null;
+    $eway_bill_number = $_POST['eway_bill_number'] ?? null;
+
+    if (!is_array($items)) {
+        ApiResponse::error('Invalid items format', 422);
+    }
 
     $conn->begin_transaction();
 
-    // Determine table name based on document type
-    $table_name = match($document_type) {
-        'quotation' => 'quotations',
-        'bill-no-gst' => 'bills',
-        'invoice' => 'invoices',
-        'challan' => 'challans',
-        default => 'invoices'
-    };
-
-    // For invoices, use invoice_number and invoice_date columns
-    // For other documents, use document_number and document_date columns
-    if ($document_type === 'invoice') {
-        $stmt = $conn->prepare("
-            INSERT INTO {$table_name} (
-                invoice_number,
-                client_id,
-                invoice_date,
-                due_date,
-                subtotal,
-                total_tax,
-                grand_total,
-                amount_received,
-                status,
-                issuer_type,
-                document_image,
-                created_at
-            ) VALUES (?, ?, ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, ?, NOW())
-        ");
-
-        $stmt->bind_param(
-            "sissddddsss",
-            $document_number,
+    $mainValues = document_filter_available_main_values(
+        $conn,
+        document_prepare_main_values(
+            $document_type,
             $client_id,
-            $document_date,
+            $document_number,
             $document_date,
             $subtotal,
             $total_tax,
+            $discount,
             $grand_total,
             $amount_received,
             $status,
             $issuer_type,
-            $document_image
-        );
-    } else if ($document_type === 'challan') {
-        // Challans may not have the same table structure - use the existing invoices table for now
-        // You'll need to create a separate challans table if needed
-        $stmt = $conn->prepare("
-            INSERT INTO invoices (
-                invoice_number,
-                client_id,
-                invoice_date,
-                due_date,
-                subtotal,
-                total_tax,
-                grand_total,
-                amount_received,
-                status,
-                issuer_type,
-                document_image,
-                created_at
-            ) VALUES (?, ?, ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, ?, NOW())
-        ");
+            $document_image,
+            $notes,
+            $vehicle_number,
+            $transport_mode,
+            $lr_number,
+            $eway_bill_number
+        )
+    );
 
-        $stmt->bind_param(
-            "sissddddsss",
-            $document_number,
-            $client_id,
-            $document_date,
-            $document_date,
-            $subtotal,
-            $total_tax,
-            $grand_total,
-            $amount_received,
-            $status,
-            $issuer_type,
-            $document_image
-        );
+    if ($edit_id > 0) {
+        $exists = $conn->prepare('SELECT id FROM invoices WHERE id = ?');
+        $exists->bind_param('i', $edit_id);
+        $exists->execute();
+
+        if (!$exists->get_result()->fetch_assoc()) {
+            ApiResponse::error('Document not found', 404);
+        }
+
+        document_update_main_record($conn, $edit_id, $mainValues);
+        $document_id = $edit_id;
+
+        $deleteItems = $conn->prepare('DELETE FROM invoice_items WHERE invoice_id = ?');
+        $deleteItems->bind_param('i', $document_id);
+        $deleteItems->execute();
     } else {
-        // For quotations and bills, use the invoices table with prefix
-        $stmt = $conn->prepare("
-            INSERT INTO invoices (
-                invoice_number,
-                client_id,
-                invoice_date,
-                due_date,
-                subtotal,
-                total_tax,
-                grand_total,
-                amount_received,
-                status,
-                issuer_type,
-                document_image,
-                created_at
-            ) VALUES (?, ?, ?, DATE_ADD(?, INTERVAL 30 DAY), ?, ?, ?, ?, ?, ?, ?, NOW())
-        ");
-
-        $stmt->bind_param(
-            "sissddddsss",
-            $document_number,
-            $client_id,
-            $document_date,
-            $document_date,
-            $subtotal,
-            $total_tax,
-            $grand_total,
-            $amount_received,
-            $status,
-            $issuer_type,
-            $document_image
-        );
+        $document_id = document_insert_main_record($conn, $mainValues);
     }
-
-    $stmt->execute();
-    $document_id = $conn->insert_id;
 
     // Insert items - all use invoice_items table for now
     $itemInsert = document_prepare_item_insert($conn);
@@ -355,7 +395,10 @@ try {
 
     $conn->commit();
 
-    ApiResponse::success([], 'Document created successfully');
+    ApiResponse::success(
+        ['document_id' => $document_id],
+        $edit_id > 0 ? 'Document updated successfully' : 'Document created successfully'
+    );
 
 } catch (Throwable $e) {
     $conn->rollback();

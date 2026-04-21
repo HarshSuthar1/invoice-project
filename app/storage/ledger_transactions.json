@@ -18,6 +18,25 @@
             ],
             "created_at": "2026-04-21T11:16:46+05:30",
             "updated_at": "2026-04-21T11:16:46+05:30"
+        },
+        {
+            "id": "led_20e8cd62488a6b23",
+            "client_id": 24,
+            "type": "payment",
+            "amount": 15000,
+            "transaction_date": "2026-04-21",
+            "payment_mode": "Cheque",
+            "reference_no": "",
+            "notes": "",
+            "allocations": [
+                {
+                    "invoice_id": 19,
+                    "invoice_number": "INV-25-0019",
+                    "amount": 15000
+                }
+            ],
+            "created_at": "2026-04-21T11:37:16+05:30",
+            "updated_at": "2026-04-21T11:37:16+05:30"
         }
     ]
 }

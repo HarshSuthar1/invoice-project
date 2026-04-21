@@ -65,56 +65,63 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
-  padding: 18px;
-  background: linear-gradient(135deg, var(--surface-color), var(--surface-subtle));
-  border: 1px solid var(--border-color);
+  padding: 18px 20px;
+  background: linear-gradient(135deg, #fffaf2 0%, #f4ecde 100%);
+  border: 1px solid #eadcc8;
   border-radius: 18px;
-  box-shadow: var(--card-shadow);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+  position: relative;
+  z-index: 6;
 }
 
 .toolbar-field {
   display: grid;
   gap: 8px;
+  position: relative;
 }
 
 .toolbar-field label {
   font-size: 0.82rem;
   font-weight: 700;
-  color: var(--text-heading);
+  color: #7a4b13;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .toolbar-field input,
-.toolbar-field select {
+.toolbar-field select,
+.ledger-combobox-input {
   width: 100%;
-  padding: 11px 12px;
-  min-height: 50px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  background: var(--surface-color);
-  color: var(--text-primary);
+  padding: 12px 14px;
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid #d7c6ab;
+  background: #fffdf9;
+  color: #1f2937;
   color-scheme: light;
-  font-size: 0.98rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 500;
   line-height: 1.2;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease, color 180ms ease, transform 180ms ease;
   -webkit-text-fill-color: currentColor;
 }
 
 .toolbar-field input:focus,
-.toolbar-field select:focus {
+.toolbar-field select:focus,
+.ledger-combobox-input:focus,
+.ledger-combobox-toggle:focus-visible {
   outline: none;
-  border-color: #b9782f;
-  box-shadow: 0 0 0 3px rgba(214, 124, 45, 0.18);
+  border-color: #d67c2d;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(214, 124, 45, 0.12);
 }
 
 .toolbar-field select {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  padding-right: 42px;
+  padding-right: 44px;
   background-image:
     linear-gradient(45deg, transparent 50%, #8a4c08 50%),
     linear-gradient(135deg, #8a4c08 50%, transparent 50%);
@@ -125,11 +132,137 @@
   background-repeat: no-repeat;
 }
 
+.toolbar-field-client {
+  z-index: 14;
+}
+
+.ledger-combobox {
+  position: relative;
+}
+
+.ledger-combobox-shell {
+  position: relative;
+}
+
+.ledger-combobox-input {
+  padding-right: 52px;
+}
+
+.ledger-combobox-toggle {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.ledger-combobox-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ledger-combobox-chevron {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+  transition: transform 180ms ease;
+}
+
+.ledger-combobox[data-open="true"] .ledger-combobox-chevron {
+  transform: rotate(-135deg) translateY(-1px);
+}
+
+.ledger-combobox-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #fffdf9;
+  border: 1px solid #d7c6ab;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+  z-index: 30;
+}
+
+.ledger-combobox-list {
+  display: grid;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.ledger-combobox-option {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  color: #1f2937;
+  text-align: left;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.ledger-combobox-option:hover,
+.ledger-combobox-option.is-active {
+  background: #f5efe5;
+  color: #111827;
+}
+
+.ledger-combobox-option.is-selected {
+  background: rgba(214, 124, 45, 0.14);
+  color: #7a4b13;
+}
+
+.ledger-combobox-option-label {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-combobox-empty {
+  padding: 16px 18px 18px;
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
 .toolbar-buttons {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: 10px;
-  align-items: end;
+  align-content: end;
+}
+
+.toolbar-buttons .btn,
+.toolbar-buttons .btn-outline {
+  justify-content: center;
+  min-height: 36px;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  border: 1px solid #d7c6ab;
+  background: rgba(255, 251, 245, 0.95);
+  color: #8a4c08;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.toolbar-buttons .btn:hover,
+.toolbar-buttons .btn-outline:hover {
+  background: #ffffff;
+  border-color: #cfb082;
 }
 
 .ledger-kpis .kpi-card {
@@ -267,6 +400,26 @@
   max-width: 760px;
 }
 
+.ledger-modal .form-group label,
+.ledger-modal .allocation-header,
+.ledger-modal .allocation-header label,
+.ledger-modal .modal-header h3 {
+  color: var(--text-heading);
+}
+
+.ledger-modal .form-group input,
+.ledger-modal .form-group select,
+.ledger-modal .form-group textarea {
+  color: var(--text-primary);
+  background: var(--surface-color);
+  border-color: var(--border-color);
+}
+
+.ledger-modal .form-group input::placeholder,
+.ledger-modal .form-group textarea::placeholder {
+  color: var(--text-muted);
+}
+
 .allocation-group {
   border: 1px solid var(--border-color);
   border-radius: 14px;
@@ -345,34 +498,164 @@ html[data-theme="dark"] .ledger-actions .btn-primary {
 }
 
 html[data-theme="dark"] .ledger-toolbar {
-  background: linear-gradient(135deg, rgba(255, 249, 239, 0.94), rgba(244, 232, 212, 0.92));
-  border-color: rgba(246, 215, 173, 0.6);
+  background: linear-gradient(180deg, #202b3d 0%, #172131 100%);
+  border-color: #334155;
+  box-shadow: 0 18px 36px rgba(2, 6, 23, 0.34);
 }
 
 html[data-theme="dark"] .toolbar-field label {
-  color: #7a3f09;
+  color: #d8e1f0;
 }
 
 html[data-theme="dark"] .toolbar-field input,
-html[data-theme="dark"] .toolbar-field select {
-  background: linear-gradient(180deg, #fffdfa 0%, #f9f1e4 100%);
-  color: #1f2937;
-  border-color: rgba(173, 122, 55, 0.52);
-  color-scheme: light;
+html[data-theme="dark"] .toolbar-field select,
+html[data-theme="dark"] .ledger-combobox-input {
+  background: linear-gradient(180deg, #111827 0%, #182233 100%);
+  color: #f8fafc;
+  border-color: #475569;
+  color-scheme: dark;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.85),
-    0 2px 6px rgba(108, 64, 11, 0.08);
-  -webkit-text-fill-color: #1f2937;
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 1px 0 rgba(255, 255, 255, 0.02);
+  -webkit-text-fill-color: #f8fafc;
 }
 
 html[data-theme="dark"] .toolbar-field input::placeholder {
-  color: #6b7280;
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .toolbar-field input:focus,
+html[data-theme="dark"] .toolbar-field select:focus {
+  border-color: var(--sidebar-active);
+  background: linear-gradient(180deg, #121c2e 0%, #1a2740 100%);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.16);
 }
 
 html[data-theme="dark"] .toolbar-field select option,
 html[data-theme="dark"] .toolbar-field select optgroup {
-  background: #fffaf2;
-  color: #1f2937;
+  background: #1f2937;
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .toolbar-field select {
+  background-image:
+    linear-gradient(45deg, transparent 50%, #cbd5e1 50%),
+    linear-gradient(135deg, #cbd5e1 50%, transparent 50%);
+}
+
+html[data-theme="dark"] .ledger-combobox-toggle {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .ledger-combobox-toggle:hover {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+html[data-theme="dark"] .ledger-combobox-panel {
+  background: #1f2937;
+  border-color: #475569;
+  box-shadow: 0 24px 48px rgba(2, 6, 23, 0.5);
+}
+
+html[data-theme="dark"] .ledger-combobox-option {
+  color: #dbe7ff;
+}
+
+html[data-theme="dark"] .ledger-combobox-option:hover,
+html[data-theme="dark"] .ledger-combobox-option.is-active {
+  background: rgba(59, 130, 246, 0.16);
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .ledger-combobox-option.is-selected {
+  background: rgba(96, 165, 250, 0.22);
+  color: #ffffff;
+}
+
+html[data-theme="dark"] .ledger-combobox-empty {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .ledger-modal {
+  background: #1f2937;
+  border-color: #374151;
+}
+
+html[data-theme="dark"] .ledger-modal .modal-header,
+html[data-theme="dark"] .ledger-modal .modal-buttons {
+  border-color: #374151;
+}
+
+html[data-theme="dark"] .ledger-modal .form-group label,
+html[data-theme="dark"] .ledger-modal .allocation-header,
+html[data-theme="dark"] .ledger-modal .allocation-header label,
+html[data-theme="dark"] .ledger-modal .modal-header h3 {
+  color: #f8fafc !important;
+}
+
+html[data-theme="dark"] .ledger-modal .form-group input,
+html[data-theme="dark"] .ledger-modal .form-group select,
+html[data-theme="dark"] .ledger-modal .form-group textarea,
+html[data-theme="dark"] .ledger-modal .allocation-row input {
+  background: #243041 !important;
+  color: #f8fafc !important;
+  border-color: #475569 !important;
+  -webkit-text-fill-color: #f8fafc;
+}
+
+html[data-theme="dark"] .ledger-modal .form-group input::placeholder,
+html[data-theme="dark"] .ledger-modal .form-group textarea::placeholder,
+html[data-theme="dark"] .ledger-modal .allocation-row input::placeholder {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .ledger-modal .form-group input:focus,
+html[data-theme="dark"] .ledger-modal .form-group select:focus,
+html[data-theme="dark"] .ledger-modal .form-group textarea:focus,
+html[data-theme="dark"] .ledger-modal .allocation-row input:focus {
+  background: #273449 !important;
+  color: #ffffff !important;
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.16) !important;
+}
+
+html[data-theme="dark"] .ledger-modal .allocation-group {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .ledger-modal .allocation-row {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .ledger-modal .allocation-row h4,
+html[data-theme="dark"] .ledger-modal .allocation-header span {
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] .ledger-modal .allocation-row p {
+  color: #93c5fd;
+}
+
+html[data-theme="dark"] .toolbar-buttons .btn,
+html[data-theme="dark"] .toolbar-buttons .btn-outline {
+  background: linear-gradient(180deg, #111827 0%, #182233 100%);
+  color: #e2e8f0;
+  border-color: #475569;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+html[data-theme="dark"] .toolbar-buttons .btn:hover,
+html[data-theme="dark"] .toolbar-buttons .btn-outline:hover {
+  background: linear-gradient(180deg, #162033 0%, #1c2940 100%);
+  border-color: #64748b;
+}
+
+html[data-theme="dark"] .toolbar-field input::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.2);
 }
 
 html[data-theme="dark"] .ledger-header h1 {
@@ -420,6 +703,11 @@ html[data-theme="dark"] .allocation-row p {
 
   .ledger-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .ledger-combobox-panel {
+    position: static;
+    margin-top: 8px;
   }
 
   .allocation-row {

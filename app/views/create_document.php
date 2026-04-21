@@ -1,5 +1,6 @@
 <?php
 $docType = $_GET['type'] ?? 'invoice';
+$editDocumentId = isset($_GET['edit']) ? (int) $_GET['edit'] : 0;
 $docTitles = [
     'quotation' => 'Quotation',
     'bill-no-gst' => 'Bill (No GST)',
@@ -675,6 +676,7 @@ if ($isInvoice) {
         <div class="invoice-card">
             <form id="documentForm">
                 <input type="hidden" id="documentType" name="document_type" value="<?php echo htmlspecialchars($docType); ?>">
+                <input type="hidden" id="editDocumentId" name="edit_id" value="<?php echo $editDocumentId > 0 ? $editDocumentId : ''; ?>">
 
                 <div class="issuer-toggle-group">
                     <label>Issued By</label>
@@ -909,12 +911,15 @@ import { formatCurrency } from '/Business%20project/assets/js/core/utils.js';
 
 let itemIndex = 0;
 const currentDocType = '<?php echo $docType; ?>';
+const initialEditDocumentId = '<?php echo $editDocumentId > 0 ? $editDocumentId : ''; ?>';
+const isEditMode = initialEditDocumentId !== '';
 const isChallan = currentDocType === 'challan';
 const canUseTax = !['bill-no-gst', 'quotation', 'challan'].includes(currentDocType);
 let showTax = canUseTax;
 const showImageColumn = ['quotation', 'bill-no-gst'].includes(currentDocType);
 let issuerType = 'company';
 let clientsReadyPromise = null;
+const documentTitle = <?php echo json_encode($docTitle); ?>;
 const importTypeLabels = {
     quotation: 'quotation',
     'bill-no-gst': 'bill (no GST)',
@@ -1414,6 +1419,15 @@ function hydrateItemImage(row, imageData) {
     pasteBox.dataset.imageData = imageData;
 }
 
+function setSaveButtonStateForMode() {
+    const saveBtn = qs('[data-action="save-document"]');
+    if (!saveBtn) return;
+
+    saveBtn.textContent = isEditMode
+        ? `Update ${documentTitle}`
+        : `Create ${documentTitle}`;
+}
+
 /* ============================================================
    ADD ITEM ROW
    ============================================================ */
@@ -1565,6 +1579,63 @@ async function importDocument(docId) {
     }
 }
 
+async function loadDocumentForEdit(docId) {
+    try {
+        const [res] = await Promise.all([
+            apiFetch(`/api/documents/get_document_details.php?id=${encodeURIComponent(docId)}`),
+            ensureClientsLoaded()
+        ]);
+        const doc = res.document || {};
+        const items = Array.isArray(res.items) ? res.items : [];
+
+        const clientSelect = qs('#clientSelect');
+        if (clientSelect) clientSelect.value = String(doc.client_id ?? '');
+
+        const documentDate = qs('#document-date');
+        if (documentDate) documentDate.value = doc.invoice_date || '';
+
+        const documentNumber = qs('#document-number');
+        if (documentNumber) documentNumber.value = doc.invoice_number || '';
+
+        if (doc.issuer_type) {
+            syncIssuerType(doc.issuer_type);
+        }
+
+        qs('#documentItemsBody').innerHTML = '';
+        itemIndex = 0;
+
+        items.forEach(item => {
+            addItemRow({
+                description: item.description || '',
+                description_extra: item.description_extra || '',
+                hsn: item.hsn_code || item.hsn || '',
+                quantity: item.quantity ?? 1,
+                unit: item.unit || 'Nos',
+                price: item.unit_price ?? item.price ?? 0,
+                tax: canUseTax ? Number(item.tax_rate ?? item.tax ?? 0) : 0,
+                sub_items: Array.isArray(item.sub_items) ? item.sub_items : [],
+                image: item.image_url || item.item_image || item.image || ''
+            });
+        });
+
+        if (!items.length) addItemRow();
+
+        if (!isChallan) {
+            syncDiscountMode(doc.discount_type === 'percent' ? 'percent' : 'flat');
+            discountValue = Number(doc.discount) || 0;
+            const discountInput = qs('#discountValue');
+            if (discountInput) discountInput.value = String(discountValue);
+        }
+
+        setSaveButtonStateForMode();
+        calculateTotals();
+    } catch (err) {
+        console.error(err);
+        showError('Failed to load document for editing');
+        if (!qsa('#documentItemsBody tr').length) addItemRow();
+    }
+}
+
 /* ============================================================
    SAVE DOCUMENT
    ============================================================ */
@@ -1665,7 +1736,7 @@ async function saveDocument() {
 
         await apiFetch('/api/documents/save_document.php', { method: 'POST', body: formData });
 
-        showSuccess('Document created successfully');
+        showSuccess(isEditMode ? 'Document updated successfully' : 'Document created successfully');
         setTimeout(() => {
             window.location.href = '/Business%20project/public/index.php?page=manage-documents';
         }, 1500);
@@ -1718,33 +1789,36 @@ document.addEventListener('input', (e) => {
 document.addEventListener('DOMContentLoaded', () => {
     qs('#document-date').value = new Date().toISOString().split('T')[0];
 
-    // Load dropdown data
-    (async () => {
-        try {
-            await ensureClientsLoaded();
-        } catch (err) {
-            console.error(err);
-            showError('Failed to load clients');
-        }
-    })();
-
-    (async () => {
-        try {
-            const res = await apiFetch(`/api/documents/get_next_number.php?type=${currentDocType}`);
-            qs('#document-number').value = res.next_number || '1';
-        } catch (err) {
-            console.error(err);
-            qs('#document-number').value = Date.now().toString().slice(-6);
-        }
-    })();
-
     // Wire discount controls
     setupDiscountControls();
     installDiscountControlOverrides();
     setupIssuerToggle();
+    setSaveButtonStateForMode();
 
-    // Add first row
-    addItemRow();
+    (async () => {
+        try {
+            await ensureClientsLoaded();
+
+            if (isEditMode) {
+                await loadDocumentForEdit(initialEditDocumentId);
+                return;
+            }
+
+            try {
+                const res = await apiFetch(`/api/documents/get_next_number.php?type=${currentDocType}`);
+                qs('#document-number').value = res.next_number || '1';
+            } catch (err) {
+                console.error(err);
+                qs('#document-number').value = Date.now().toString().slice(-6);
+            }
+
+            addItemRow();
+        } catch (err) {
+            console.error(err);
+            showError('Failed to initialize document form');
+            if (!qsa('#documentItemsBody tr').length) addItemRow();
+        }
+    })();
 });
     </script>
     <script type="module" src="/Business%20project/assets/js/main.js"></script>

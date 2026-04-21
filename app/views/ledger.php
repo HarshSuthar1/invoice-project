@@ -28,11 +28,34 @@
         </header>
 
         <section class="ledger-toolbar">
-            <div class="toolbar-field">
-                <label for="clientSelect">Client</label>
-                <select id="clientSelect">
-                    <option value="">Select a client</option>
-                </select>
+            <div class="toolbar-field toolbar-field-client">
+                <label for="clientComboboxInput">Client</label>
+                <div class="ledger-combobox" id="clientCombobox" data-open="false">
+                    <select id="clientSelect" hidden aria-hidden="true" tabindex="-1">
+                        <option value="">Select a client</option>
+                    </select>
+                    <div class="ledger-combobox-shell">
+                        <input
+                            type="text"
+                            id="clientComboboxInput"
+                            class="ledger-combobox-input"
+                            placeholder="Search client"
+                            autocomplete="off"
+                            role="combobox"
+                            aria-autocomplete="list"
+                            aria-expanded="false"
+                            aria-haspopup="listbox"
+                            aria-controls="clientComboboxListbox"
+                        >
+                        <button type="button" class="ledger-combobox-toggle" id="clientComboboxButton" aria-label="Toggle client list">
+                            <span class="ledger-combobox-chevron" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                    <div class="ledger-combobox-panel" id="clientComboboxPanel" hidden>
+                        <div class="ledger-combobox-list" id="clientComboboxListbox" role="listbox"></div>
+                        <div class="ledger-combobox-empty" id="clientComboboxEmpty" hidden>No clients found.</div>
+                    </div>
+                </div>
             </div>
 
             <div class="toolbar-field">

@@ -7,6 +7,11 @@ const state = {
   overview: [],
   ledger: null,
   selectedClientId: null,
+  clientCombobox: {
+    isOpen: false,
+    filteredClients: [],
+    activeIndex: -1,
+  },
 };
 
 const today = new Date().toISOString().slice(0, 10);
@@ -20,14 +25,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 function bindEvents() {
   qs('#applyFiltersBtn')?.addEventListener('click', loadLedgerForSelectedClient);
-  qs('#clientSelect')?.addEventListener('change', async (event) => {
-    state.selectedClientId = event.target.value || null;
-    syncQueryString();
-    updateStatementLink();
-    await loadLedgerForSelectedClient();
+  qs('#clientComboboxInput')?.addEventListener('focus', () => openClientCombobox());
+  qs('#clientComboboxInput')?.addEventListener('input', handleClientComboboxInput);
+  qs('#clientComboboxInput')?.addEventListener('keydown', handleClientComboboxKeydown);
+  qs('#clientComboboxButton')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    toggleClientCombobox();
+  });
+  qs('#clientComboboxListbox')?.addEventListener('click', async (event) => {
+    const option = event.target.closest('[data-client-id]');
+    if (!option) return;
+
+    await selectClient(option.dataset.clientId);
   });
 
   document.addEventListener('click', (event) => {
+    if (!event.target.closest('#clientCombobox')) {
+      closeClientCombobox({ restoreSelection: true });
+    }
+
     const action = event.target.dataset.action;
     const modalTarget = event.target.dataset.target;
     const openTransactionType = event.target.dataset.openTransaction;
@@ -49,11 +65,7 @@ function bindEvents() {
     }
 
     if (quickOpenClientId) {
-      state.selectedClientId = quickOpenClientId;
-      qs('#clientSelect').value = quickOpenClientId;
-      syncQueryString();
-      updateStatementLink();
-      loadLedgerForSelectedClient();
+      void selectClient(quickOpenClientId);
     }
   });
 
@@ -79,14 +91,12 @@ async function initializeSelection() {
   const fallbackClient = clientIdFromUrl || state.overview[0]?.client_id || '';
 
   if (!fallbackClient) {
+    syncClientSelectionUI();
     updateStatementLink();
     return;
   }
 
-  state.selectedClientId = String(fallbackClient);
-  qs('#clientSelect').value = state.selectedClientId;
-  updateStatementLink();
-  await loadLedgerForSelectedClient();
+  await selectClient(fallbackClient, { syncQuery: false });
 }
 
 async function loadOverview() {
@@ -107,12 +117,225 @@ async function loadOverview() {
       select.appendChild(option);
     });
 
+    if (state.selectedClientId && !getClientById(state.selectedClientId)) {
+      state.selectedClientId = null;
+    }
+
+    syncClientSelectionUI();
+    renderClientComboboxOptions();
+
     renderOverviewTable();
   } catch (error) {
     console.error(error);
     tbody.innerHTML = '<tr><td colspan="6" class="error">Failed to load client balances.</td></tr>';
     showError(error.message || 'Failed to load ledger overview');
   }
+}
+
+function getClientById(clientId) {
+  return state.overview.find((client) => String(client.client_id) === String(clientId)) || null;
+}
+
+function getClientComboboxElements() {
+  return {
+    root: qs('#clientCombobox'),
+    input: qs('#clientComboboxInput'),
+    panel: qs('#clientComboboxPanel'),
+    listbox: qs('#clientComboboxListbox'),
+    empty: qs('#clientComboboxEmpty'),
+    select: qs('#clientSelect'),
+  };
+}
+
+function syncClientSelectionUI() {
+  const { input, select } = getClientComboboxElements();
+  const selectedClient = getClientById(state.selectedClientId);
+  const selectedLabel = selectedClient?.client_name || '';
+
+  if (select) select.value = state.selectedClientId || '';
+  if (input) input.value = selectedLabel;
+}
+
+function getComboboxQuery() {
+  const input = qs('#clientComboboxInput');
+  return (input?.value || '').trim().toLowerCase();
+}
+
+function filterClients(query) {
+  if (!query) return [...state.overview];
+
+  return state.overview.filter((client) => {
+    const clientName = String(client.client_name || '').toLowerCase();
+    return clientName.includes(query);
+  });
+}
+
+function syncClientActiveDescendant() {
+  const input = qs('#clientComboboxInput');
+  const activeClient = state.clientCombobox.filteredClients[state.clientCombobox.activeIndex];
+  if (!input) return;
+
+  if (!activeClient) {
+    input.removeAttribute('aria-activedescendant');
+    return;
+  }
+
+  input.setAttribute('aria-activedescendant', `clientComboboxOption-${activeClient.client_id}`);
+}
+
+function renderClientComboboxOptions() {
+  const { listbox, empty } = getClientComboboxElements();
+  if (!listbox || !empty) return;
+
+  const filteredClients = state.clientCombobox.filteredClients;
+  const activeClient = filteredClients[state.clientCombobox.activeIndex];
+
+  if (!filteredClients.length) {
+    listbox.innerHTML = '';
+    empty.hidden = false;
+    syncClientActiveDescendant();
+    return;
+  }
+
+  empty.hidden = true;
+  listbox.innerHTML = filteredClients.map((client) => {
+    const clientId = String(client.client_id);
+    const isSelected = String(state.selectedClientId || '') === clientId;
+    const isActive = String(activeClient?.client_id || '') === clientId;
+
+    return `
+      <button
+        type="button"
+        class="ledger-combobox-option${isSelected ? ' is-selected' : ''}${isActive ? ' is-active' : ''}"
+        id="clientComboboxOption-${clientId}"
+        role="option"
+        aria-selected="${isSelected ? 'true' : 'false'}"
+        data-client-id="${clientId}"
+      >
+        <span class="ledger-combobox-option-label">${escapeHtml(client.client_name)}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+function setClientComboboxActiveIndex(nextIndex) {
+  const total = state.clientCombobox.filteredClients.length;
+  if (!total) {
+    state.clientCombobox.activeIndex = -1;
+    renderClientComboboxOptions();
+    return;
+  }
+
+  const boundedIndex = Math.max(0, Math.min(nextIndex, total - 1));
+  state.clientCombobox.activeIndex = boundedIndex;
+  renderClientComboboxOptions();
+  syncClientActiveDescendant();
+
+  const activeOption = qs(`#clientComboboxOption-${state.clientCombobox.filteredClients[boundedIndex].client_id}`);
+  activeOption?.scrollIntoView({ block: 'nearest' });
+}
+
+function openClientCombobox({ useCurrentQuery = false } = {}) {
+  const { root, input, panel } = getClientComboboxElements();
+  if (!root || !input || !panel) return;
+
+  const query = useCurrentQuery ? getComboboxQuery() : '';
+  state.clientCombobox.filteredClients = filterClients(query);
+  state.clientCombobox.activeIndex = state.clientCombobox.filteredClients.length ? 0 : -1;
+  state.clientCombobox.isOpen = true;
+
+  root.dataset.open = 'true';
+  panel.hidden = false;
+  input.setAttribute('aria-expanded', 'true');
+  renderClientComboboxOptions();
+}
+
+function closeClientCombobox({ restoreSelection = false } = {}) {
+  const { root, input, panel } = getClientComboboxElements();
+  if (!root || !input || !panel) return;
+
+  state.clientCombobox.isOpen = false;
+  state.clientCombobox.activeIndex = -1;
+  root.dataset.open = 'false';
+  panel.hidden = true;
+  input.setAttribute('aria-expanded', 'false');
+  input.removeAttribute('aria-activedescendant');
+
+  if (restoreSelection) syncClientSelectionUI();
+}
+
+function toggleClientCombobox() {
+  if (state.clientCombobox.isOpen) {
+    closeClientCombobox({ restoreSelection: true });
+    return;
+  }
+
+  openClientCombobox();
+  qs('#clientComboboxInput')?.focus();
+}
+
+function handleClientComboboxInput() {
+  state.clientCombobox.filteredClients = filterClients(getComboboxQuery());
+  state.clientCombobox.activeIndex = state.clientCombobox.filteredClients.length ? 0 : -1;
+
+  if (!state.clientCombobox.isOpen) {
+    openClientCombobox({ useCurrentQuery: true });
+    return;
+  }
+
+  renderClientComboboxOptions();
+}
+
+async function handleClientComboboxKeydown(event) {
+  const total = state.clientCombobox.filteredClients.length;
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    if (!state.clientCombobox.isOpen) {
+      openClientCombobox();
+      return;
+    }
+
+    setClientComboboxActiveIndex(total ? state.clientCombobox.activeIndex + 1 : -1);
+    return;
+  }
+
+  if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    if (!state.clientCombobox.isOpen) {
+      openClientCombobox();
+      return;
+    }
+
+    setClientComboboxActiveIndex(total ? state.clientCombobox.activeIndex - 1 : -1);
+    return;
+  }
+
+  if (event.key === 'Enter') {
+    if (!state.clientCombobox.isOpen) return;
+
+    event.preventDefault();
+    const activeClient = state.clientCombobox.filteredClients[state.clientCombobox.activeIndex];
+    if (activeClient) {
+      await selectClient(activeClient.client_id);
+    }
+    return;
+  }
+
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeClientCombobox({ restoreSelection: true });
+  }
+}
+
+async function selectClient(clientId, { syncQuery = true } = {}) {
+  state.selectedClientId = clientId ? String(clientId) : null;
+  syncClientSelectionUI();
+  closeClientCombobox();
+
+  if (syncQuery) syncQueryString();
+  updateStatementLink();
+  await loadLedgerForSelectedClient();
 }
 
 function renderOverviewTable() {
